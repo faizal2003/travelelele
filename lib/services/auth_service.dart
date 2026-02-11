@@ -66,4 +66,24 @@ class AuthService {
   Future<void> signOut() async {
     await _auth.signOut();
   }
+
+  Future<String?> updateUserProfile({required String name, required String phone}) async {
+    try {
+      String uid = _auth.currentUser!.uid;
+      await _firestore.collection('users').doc(uid).update({
+        'name': name,
+        'phone': phone, // We will add a phone number field
+      });
+      return null; // Success
+    } catch (e) {
+      return "Failed to update profile: $e";
+    }
+  }
+
+  // Get Current User Stream (Real-time updates)
+  Stream<DocumentSnapshot> getUserStream() {
+    String uid = _auth.currentUser!.uid;
+    return _firestore.collection('users').doc(uid).snapshots();
+  }
 }
+
