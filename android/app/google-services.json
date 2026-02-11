@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "130980165869",
+    "firebase_url": "https://tugas-akhir109-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "tugas-akhir109",
+    "storage_bucket": "tugas-akhir109.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:130980165869:android:3809d66cb0e5b2852774e4",
+        "android_client_info": {
+          "package_name": "com.example.travel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuRhU1dBjvKRul6FuKcq3kuYosWme-1Dw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:130980165869:android:8e1b427a260ce4c72774e4",
+        "android_client_info": {
+          "package_name": "com.example.travelelele"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuRhU1dBjvKRul6FuKcq3kuYosWme-1Dw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

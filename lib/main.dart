@@ -1,0 +1,37 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // Import Core
+import 'screens/login_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Required for async
+  await Firebase.initializeApp(); // Initialize Firebase
+  runApp(const SmartTravelApp());
+}
+
+class SmartTravelApp extends StatelessWidget {
+  const SmartTravelApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Smart Travel Booking',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primaryColor: const Color(0xFF154c79),
+        scaffoldBackgroundColor: const Color(0xFFF5F6F8),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF154c79)),
+        useMaterial3: true,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF154c79),
+            foregroundColor: Colors.white,
+            shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+        ),
+      ),
+      home: const LoginScreen(),
+    );
+  }
+}
