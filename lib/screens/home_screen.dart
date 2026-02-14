@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'travel_search_screen.dart';
 import '../models/trip_model.dart';
 import 'travel_list_screen.dart';
 import 'detail_screen.dart';
@@ -180,7 +181,14 @@ class HomeContent extends StatelessWidget {
 
   Widget _buildCategoryCard(BuildContext context, String title, IconData icon, Color color) {
     return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TravelListScreen())),
+      // NEW
+        onTap: () {
+          if (title == "Cari Travel") {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const TravelSearchScreen()));
+          } else {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const TravelListScreen()));
+          }
+        },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [

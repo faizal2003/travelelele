@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+import '../models/route_model.dart';
 import 'home_screen.dart';
 
 class TicketScreen extends StatelessWidget {
-  const TicketScreen({super.key});
+  final TravelRoute route;
+  final List<int> selectedSeats;
+  final String passengerName;
+
+  const TicketScreen({
+    super.key,
+    required this.route,
+    required this.selectedSeats,
+    required this.passengerName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +22,9 @@ class TicketScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.home),
           onPressed: () => Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (_) => const HomeScreen())),
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          ),
         ),
       ),
       body: Padding(
@@ -25,24 +37,33 @@ class TicketScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 10)
+                  BoxShadow(color: Colors.black12, blurRadius: 10),
                 ],
               ),
               child: Column(
                 children: [
-                  const Text("Smart Travel Booking",
-                      style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const Text(
+                    "Smart Travel Booking",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                   const Divider(height: 30),
-                  _buildTicketRow("Penumpang", "Budi Santoso"),
-                  _buildTicketRow("Rute", "Jakarta - Bali"),
-                  _buildTicketRow("Tanggal", "12 Feb 2026"),
-                  _buildTicketRow("Kursi", "B3"),
+                  _buildTicketRow("Penumpang", passengerName),
+                  _buildTicketRow(
+                    "Rute",
+                    "${route.fromCity} - ${route.toCity}",
+                  ),
+                  _buildTicketRow(
+                    "Jadwal",
+                    "${route.departTime} - ${route.arriveTime}",
+                  ),
+                  _buildTicketRow("Kursi", selectedSeats.join(", ")),
                   const Divider(height: 30),
                   const Icon(Icons.qr_code, size: 120),
                   const SizedBox(height: 10),
-                  const Text("Scan Masuk Gate",
-                      style: TextStyle(color: Colors.grey)),
+                  const Text(
+                    "Scan Masuk Gate",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ),

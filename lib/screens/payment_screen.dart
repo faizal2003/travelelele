@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
+import '../models/route_model.dart';
 import 'ticket_screen.dart';
 
 class PaymentScreen extends StatelessWidget {
-  const PaymentScreen({super.key});
+  final TravelRoute route;
+  final List<int> selectedSeats;
+  final String passengerName;
+  final String passengerPhone;
+
+  const PaymentScreen({
+    super.key,
+    required this.route,
+    required this.selectedSeats,
+    required this.passengerName,
+    required this.passengerPhone,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Parse price string "Rp 100.000" -> 100000
+    int pricePerSeat = int.parse(route.price.replaceAll(RegExp(r'[^0-9]'), ''));
+    int totalPrice = pricePerSeat * selectedSeats.length;
+
     return Scaffold(
       appBar: AppBar(title: const Text("Pembayaran QRIS")),
       body: Center(
@@ -14,8 +30,15 @@ class PaymentScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Scan QRIS untuk Bayar",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                "Booking untuk ${selectedSeats.length} Kursi",
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Scan QRIS untuk Bayar",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 20),
               Container(
                 height: 250,
@@ -26,23 +49,32 @@ class PaymentScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text("Total: Rp 300.000",
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange)),
+              Text(
+                "Total: Rp ${totalPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}",
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => const TicketScreen()),
-                        (route) => false,
+                    MaterialPageRoute(
+                      builder: (_) => TicketScreen(
+                        route: route,
+                        selectedSeats: selectedSeats,
+                        passengerName: passengerName,
+                      ),
+                    ),
+                    (route) => false,
                   ),
                   child: const Text("Saya Sudah Bayar"),
                 ),
-              )
+              ),
             ],
           ),
         ),

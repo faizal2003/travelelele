@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'payment_screen.dart';
+import '../models/route_model.dart';
+import 'passenger_details_screen.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
-  const SeatSelectionScreen({super.key});
+  final TravelRoute route;
+  const SeatSelectionScreen({super.key, required this.route});
 
   @override
   State<SeatSelectionScreen> createState() => _SeatSelectionScreenState();
@@ -15,7 +17,11 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Pilih Kursi")),
+      appBar: AppBar(
+        title: Text(
+          "Pilih Kursi - ${widget.route.fromCity} ke ${widget.route.toCity}",
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -45,11 +51,13 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                         border: Border.all(color: Colors.grey[300]!),
                       ),
                       child: Center(
-                          child: Icon(
-                            Icons.chair,
-                            color:
-                            seats[index] == 1 ? Colors.white : Colors.grey[600],
-                          )),
+                        child: Icon(
+                          Icons.chair,
+                          color: seats[index] == 1
+                              ? Colors.white
+                              : Colors.grey[600],
+                        ),
+                      ),
                     ),
                   );
                 },
@@ -58,11 +66,32 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const PaymentScreen())),
-                child: const Text("Lanjut ke Pembayaran"),
+                onPressed: () {
+                  List<int> selectedSeats = [];
+                  for (int i = 0; i < seats.length; i++) {
+                    if (seats[i] == 1) selectedSeats.add(i + 1);
+                  }
+
+                  if (selectedSeats.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Pilih minimal satu kursi")),
+                    );
+                    return;
+                  }
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PassengerDetailsScreen(
+                        route: widget.route,
+                        selectedSeats: selectedSeats,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text("Lanjut ke Data Penumpang"),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -90,12 +119,14 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     return Row(
       children: [
         Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.grey))),
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: Colors.grey),
+          ),
+        ),
         const SizedBox(width: 8),
         Text(label),
       ],

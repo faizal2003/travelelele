@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 
@@ -40,7 +39,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (error == null) {
         _isEditing = false;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile Updated Successfully!"), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text("Profile Updated Successfully!"),
+            backgroundColor: Colors.green,
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -57,7 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
+      (route) => false,
     );
   }
 
@@ -67,10 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text("My Profile"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          )
+          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
@@ -135,7 +134,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _saveProfile,
                           child: _isLoading
-                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
                               : const Text("Save Changes"),
                         ),
                       ),
@@ -157,7 +163,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+  ) {
     return TextField(
       controller: controller,
       enabled: _isEditing, // Disable input if not in edit mode
