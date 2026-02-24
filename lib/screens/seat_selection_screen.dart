@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/route_model.dart';
+import '../services/booking_service.dart';
 import 'passenger_details_screen.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
@@ -11,8 +12,9 @@ class SeatSelectionScreen extends StatefulWidget {
 }
 
 class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
-  // Simple 4x4 grid state. 0=Available, 1=Selected, 2=Booked
-  List<int> seats = [0, 0, 2, 0, 0, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0];
+  final BookingService _bookingService = BookingService();
+  final Set<int> _selectedSeats = {};
+  final int _totalSeats = 16; // Simple 4x4 grid
 
   @override
   Widget build(BuildContext context) {
@@ -29,36 +31,78 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
             _buildLegend(),
             const SizedBox(height: 30),
             Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: seats.length,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      if (seats[index] == 2) return; // Booked
+              child: StreamBuilder<List<int>>(
+                stream: _bookingService.getBookedSeatsStream(widget.route.id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+
+                  final bookedSeats = snapshot.data ?? [];
+
+                  // Remove locally selected seats if they were booked by someone else
+                  final toRemove = _selectedSeats.where((seat) => bookedSeats.contains(seat)).toList();
+                  if (toRemove.isNotEmpty) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
                       setState(() {
-                        seats[index] = seats[index] == 0 ? 1 : 0;
+                        _selectedSeats.removeAll(toRemove);
                       });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: _getSeatColor(seats[index]),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.chair,
-                          color: seats[index] == 1
-                              ? Colors.white
-                              : Colors.grey[600],
-                        ),
-                      ),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Kursi yang Anda pilih baru saja dipesan.")),
+                      );
+                    });
+                  }
+
+                  return GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
                     ),
+                    itemCount: _totalSeats,
+                    itemBuilder: (context, index) {
+                      final seatNumber = index + 1;
+                      final isBooked = bookedSeats.contains(seatNumber);
+                      final isSelected = _selectedSeats.contains(seatNumber);
+
+                      int status = 0; // 0=Available
+                      if (isBooked) {
+                        status = 2; // 2=Booked
+                      } else if (isSelected) {
+                        status = 1; // 1=Selected
+                      }
+
+                      return GestureDetector(
+                        onTap: () {
+                          if (isBooked) return;
+
+                          setState(() {
+                            if (isSelected) {
+                              _selectedSeats.remove(seatNumber);
+                            } else {
+                              _selectedSeats.add(seatNumber);
+                            }
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: _getSeatColor(status),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.chair,
+                              color: status == 1 ? Colors.white : Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -67,12 +111,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  List<int> selectedSeats = [];
-                  for (int i = 0; i < seats.length; i++) {
-                    if (seats[i] == 1) selectedSeats.add(i + 1);
-                  }
-
-                  if (selectedSeats.isEmpty) {
+                  if (_selectedSeats.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Pilih minimal satu kursi")),
                     );
@@ -84,7 +123,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                     MaterialPageRoute(
                       builder: (_) => PassengerDetailsScreen(
                         route: widget.route,
-                        selectedSeats: selectedSeats,
+                        selectedSeats: _selectedSeats.toList()..sort(),
                       ),
                     ),
                   );

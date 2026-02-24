@@ -5,13 +5,13 @@ import 'home_screen.dart';
 class TicketScreen extends StatelessWidget {
   final TravelRoute route;
   final List<int> selectedSeats;
-  final String passengerName;
+  final List<String> passengerNames;
 
   const TicketScreen({
     super.key,
     required this.route,
     required this.selectedSeats,
-    required this.passengerName,
+    required this.passengerNames,
   });
 
   @override
@@ -47,7 +47,7 @@ class TicketScreen extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   const Divider(height: 30),
-                  _buildTicketRow("Penumpang", passengerName),
+                  _buildTicketRow("Penumpang", passengerNames.join(", ")),
                   _buildTicketRow(
                     "Rute",
                     "${route.fromCity} - ${route.toCity}",
@@ -91,7 +91,13 @@ class TicketScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Flexible(
+            child: Text(
+              value, 
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.right,
+            ),
+          ),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/route_model.dart';
+import '../services/booking_service.dart';
 import 'seat_selection_screen.dart'; // We reuse your existing seat selection
 
 class TravelSearchScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
     text: "Bandung",
   );
   DateTime _selectedDate = DateTime.now();
+  final BookingService _bookingService = BookingService();
 
   // List to display (starts with all routes, filters later)
   List<TravelRoute> _displayRoutes = dummyRoutes;
@@ -293,94 +295,114 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
   }
 
   Widget _buildRouteCard(BuildContext context, TravelRoute route) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Top Row: Seats & Price (Operator Removed)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return StreamBuilder<List<int>>(
+      stream: _bookingService.getBookedSeatsStream(route.id),
+      builder: (context, snapshot) {
+        int availableSeats = 16; // Using 16 as the total default capacity
+
+        if (snapshot.hasData) {
+          availableSeats = 16 - snapshot.data!.length;
+        }
+
+        // Just in case data gives more seats than 16 somehow
+        if (availableSeats < 0) {
+          availableSeats = 0;
+        }
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 3,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
               children: [
+                // Top Row: Seats & Price
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(
-                      Icons.event_seat,
-                      size: 18,
-                      color: route.seatsAvailable < 3
-                          ? Colors.red
-                          : Colors.green,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.event_seat,
+                          size: 18,
+                          color: availableSeats < 3
+                              ? Colors.red
+                              : Colors.green,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "$availableSeats Kursi Tersedia",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: availableSeats < 3
+                                ? Colors.red
+                                : Colors.green,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
                     Text(
-                      "${route.seatsAvailable} Kursi Tersedia",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: route.seatsAvailable < 3
-                            ? Colors.red
-                            : Colors.green,
+                      route.price,
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
                     ),
                   ],
                 ),
-                Text(
-                  route.price,
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
+                const Divider(height: 30),
+
+                // Middle Row: Time & Route
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildTimeColumn(route.departTime, route.fromCity),
+                    const Icon(Icons.arrow_forward, color: Colors.grey),
+                    _buildTimeColumn(route.arriveTime, route.toCity),
+                  ],
                 ),
-              ],
-            ),
-            const Divider(height: 30),
+                const SizedBox(height: 16),
 
-            // Middle Row: Time & Route
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildTimeColumn(route.departTime, route.fromCity),
-                const Icon(Icons.arrow_forward, color: Colors.grey),
-                _buildTimeColumn(route.arriveTime, route.toCity),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SeatSelectionScreen(route: route),
+                // Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: availableSeats == 0
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SeatSelectionScreen(route: route),
+                              ),
+                            );
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: availableSeats == 0 
+                          ? Colors.grey 
+                          : Theme.of(context).primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text(
-                  "Pilih Jadwal Ini",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    child: Text(
+                      availableSeats == 0 ? "Penuh" : "Pilih Jadwal Ini",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

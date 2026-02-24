@@ -19,28 +19,46 @@ class PassengerDetailsScreen extends StatefulWidget {
 }
 
 class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final List<TextEditingController> _nameControllers = [];
+  final List<TextEditingController> _phoneControllers = [];
   final AuthService _authService = AuthService();
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    // Initialize controllers for each seat
+    for (int i = 0; i < widget.selectedSeats.length; i++) {
+      _nameControllers.add(TextEditingController());
+      _phoneControllers.add(TextEditingController());
+    }
     _loadUserData();
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _nameControllers) {
+      controller.dispose();
+    }
+    for (var controller in _phoneControllers) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
     try {
       final userStream = _authService.getUserStream();
-      final snapshot =
-          await userStream.first; // Get current state exactly once for pre-fill
+      final snapshot = await userStream.first; // Get current state exactly once for pre-fill
 
       if (snapshot.exists) {
         final data = snapshot.data() as Map<String, dynamic>;
         setState(() {
-          _nameController.text = data['name'] ?? '';
-          _phoneController.text = data['phone'] ?? '';
+          // Pre-fill only the first passenger's info
+          if (_nameControllers.isNotEmpty) {
+            _nameControllers[0].text = data['name'] ?? '';
+            _phoneControllers[0].text = data['phone'] ?? '';
+          }
         });
       }
     } catch (e) {
@@ -51,12 +69,24 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
   }
 
   void _proceedToPayment() {
-    if (_nameController.text.isEmpty || _phoneController.text.isEmpty) {
+    bool allValid = true;
+
+    for (int i = 0; i < widget.selectedSeats.length; i++) {
+      if (_nameControllers[i].text.isEmpty || _phoneControllers[i].text.isEmpty) {
+        allValid = false;
+        break;
+      }
+    }
+
+    if (!allValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mohon lengkapi data penumpang")),
+        const SnackBar(content: Text("Mohon lengkapi semua data penumpang")),
       );
       return;
     }
+
+    List<String> names = _nameControllers.map((c) => c.text).toList();
+    List<String> phones = _phoneControllers.map((c) => c.text).toList();
 
     Navigator.push(
       context,
@@ -64,8 +94,8 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
         builder: (_) => PaymentScreen(
           route: widget.route,
           selectedSeats: widget.selectedSeats,
-          passengerName: _nameController.text,
-          passengerPhone: _phoneController.text,
+          passengerNames: names,
+          passengerPhones: phones,
         ),
       ),
     );
@@ -77,37 +107,64 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
       appBar: AppBar(title: const Text("Data Penumpang")),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  _buildRouteSummary(),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Detail Penumpang",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: _buildRouteSummary(),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    itemCount: widget.selectedSeats.length,
+                    itemBuilder: (context, index) {
+                      int seatNumber = widget.selectedSeats[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Penumpang ${index + 1} (Kursi $seatNumber)",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _nameControllers[index],
+                              decoration: const InputDecoration(
+                                labelText: "Nama Lengkap",
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.person),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _phoneControllers[index],
+                              decoration: const InputDecoration(
+                                labelText: "Nomor Telepon",
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.phone),
+                              ),
+                              keyboardType: TextInputType.phone,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: "Nama Lengkap",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _phoneController,
-                    decoration: const InputDecoration(
-                      labelText: "Nomor Telepon",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.phone),
-                    ),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const Spacer(),
-                  SizedBox(
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _proceedToPayment,
@@ -117,8 +174,8 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
                       child: const Text("Lanjut ke Pembayaran"),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
     );
   }
