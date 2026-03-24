@@ -298,13 +298,13 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
     return StreamBuilder<List<int>>(
       stream: _bookingService.getBookedSeatsStream(route.id),
       builder: (context, snapshot) {
-        int availableSeats = 16; // Using 16 as the total default capacity
+        int totalCapacity = route.isWisata ? 7 : 19;
+        int availableSeats = totalCapacity;
 
         if (snapshot.hasData) {
-          availableSeats = 16 - snapshot.data!.length;
+          availableSeats = totalCapacity - snapshot.data!.length;
         }
 
-        // Just in case data gives more seats than 16 somehow
         if (availableSeats < 0) {
           availableSeats = 0;
         }

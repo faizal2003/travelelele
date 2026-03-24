@@ -6,6 +6,7 @@ class TravelRoute {
   final String arriveTime;
   final String price;
   final int seatsAvailable;
+  final bool isWisata;
 
   TravelRoute({
     required this.id,
@@ -15,10 +16,11 @@ class TravelRoute {
     required this.arriveTime,
     required this.price,
     required this.seatsAvailable,
+    this.isWisata = false,
   });
 }
 
-// Dummy Data (Updated without operator info)
+// Dummy Data
 final List<TravelRoute> dummyRoutes = [
   TravelRoute(
     id: '1',
