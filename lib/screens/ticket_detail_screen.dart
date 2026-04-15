@@ -14,6 +14,7 @@ class TicketDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final fromCity = ticketData['fromCity'] ?? 'Unknown';
     final toCity = ticketData['toCity'] ?? 'Unknown';
+    final isWisata = ticketData['isWisata'] ?? false;
     final departTime = ticketData['departTime'] ?? '--:--';
     final arriveTime = ticketData['arriveTime'] ?? '--:--';
     final status = ticketData['status'] ?? 'Unknown';
@@ -32,7 +33,7 @@ class TicketDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildTicketHeader(fromCity, toCity, status),
+            _buildTicketHeader(fromCity, toCity, status, isWisata),
             const SizedBox(height: 24),
             _buildTripInfo(departTime, arriveTime, seats),
             const SizedBox(height: 24),
@@ -45,7 +46,7 @@ class TicketDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTicketHeader(String from, String to, String status) {
+  Widget _buildTicketHeader(String from, String to, String status, bool isWisata) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -87,14 +88,30 @@ class TicketDetailScreen extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const Divider(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildCityColumn(from, "Keberangkatan"),
-              const Icon(Icons.arrow_forward_rounded, color: Colors.blue, size: 32),
-              _buildCityColumn(to, "Tujuan"),
-            ],
-          ),
+          if (isWisata)
+            Column(
+              children: [
+                const Text(
+                  "Paket Wisata",
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  to,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildCityColumn(from, "Keberangkatan"),
+                const Icon(Icons.arrow_forward_rounded, color: Colors.blue, size: 32),
+                _buildCityColumn(to, "Tujuan"),
+              ],
+            ),
         ],
       ),
     );

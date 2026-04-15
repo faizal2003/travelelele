@@ -64,7 +64,7 @@ class DetailScreen extends StatelessWidget {
                           departTime: '08:00',
                           arriveTime: '18:00',
                           price: trip.price,
-                          seatsAvailable: 7,
+                          seatsAvailable: 19,
                           isWisata: true,
                         );
 

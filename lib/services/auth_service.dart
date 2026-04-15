@@ -11,6 +11,7 @@ class AuthService {
     required String password,
     required String role,
     required String name,
+    required String gender,
   }) async {
     try {
       // 1. Create User in Firebase Auth
@@ -24,6 +25,7 @@ class AuthService {
         'uid': result.user!.uid,
         'email': email,
         'name': name,
+        'gender': gender, // "Laki-laki" or "Perempuan"
         'role': role, // "Customer", "Driver", or "Admin"
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -65,6 +67,16 @@ class AuthService {
   // Sign Out
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  // Password Reset
+  Future<String?> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return null; // Success
+    } on FirebaseAuthException catch (e) {
+      return e.message;
+    }
   }
 
   Future<String?> updateUserProfile({required String name, required String phone}) async {

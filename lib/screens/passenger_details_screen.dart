@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/route_model.dart';
 import '../services/auth_service.dart';
@@ -69,24 +70,37 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
   }
 
   void _proceedToPayment() {
-    bool allValid = true;
+    String? errorMessage;
 
     for (int i = 0; i < widget.selectedSeats.length; i++) {
-      if (_nameControllers[i].text.isEmpty || _phoneControllers[i].text.isEmpty) {
-        allValid = false;
+      String name = _nameControllers[i].text.trim();
+      String phone = _phoneControllers[i].text.trim();
+
+      if (name.isEmpty || phone.isEmpty) {
+        errorMessage = "Mohon lengkapi semua data penumpang";
+        break;
+      }
+
+      if (name.length < 3) {
+        errorMessage = "Nama penumpang ${i + 1} terlalu pendek (min 3 karakter)";
+        break;
+      }
+
+      if (phone.length < 10 || phone.length > 13) {
+        errorMessage = "Nomor telepon penumpang ${i + 1} tidak valid (10-13 digit)";
         break;
       }
     }
 
-    if (!allValid) {
+    if (errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Mohon lengkapi semua data penumpang")),
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
       return;
     }
 
-    List<String> names = _nameControllers.map((c) => c.text).toList();
-    List<String> phones = _phoneControllers.map((c) => c.text).toList();
+    List<String> names = _nameControllers.map((c) => c.text.trim()).toList();
+    List<String> phones = _phoneControllers.map((c) => c.text.trim()).toList();
 
     Navigator.push(
       context,
@@ -144,7 +158,12 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
                                 labelText: "Nama Lengkap",
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.person),
+                                hintText: "Contoh: Budi Santoso",
                               ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                              ],
+                              textCapitalization: TextCapitalization.words,
                             ),
                             const SizedBox(height: 16),
                             TextField(
@@ -153,8 +172,13 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
                                 labelText: "Nomor Telepon",
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.phone),
+                                hintText: "Contoh: 081234567890",
                               ),
                               keyboardType: TextInputType.phone,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(13),
+                              ],
                             ),
                           ],
                         ),

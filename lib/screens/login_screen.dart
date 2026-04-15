@@ -15,23 +15,44 @@ class _LoginScreenState extends State<LoginScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String _selectedGender = 'Laki-laki';
   final AuthService _authService = AuthService();
 
   bool _isLogin = true;
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   void _submit() async {
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+    final String name = _nameController.text.trim();
+
+    // Basic email validation regex
+    final bool isEmailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+
+    if (email.isEmpty || password.isEmpty || (!_isLogin && name.isEmpty)) {
+      _showError("Mohon lengkapi semua data");
+      return;
+    }
+
+    if (!isEmailValid) {
+      _showError("Format email tidak valid");
+      return;
+    }
+
+    if (password.length < 6) {
+      _showError("Password minimal 6 karakter");
+      return;
+    }
+
     setState(() => _isLoading = true);
     String? result;
 
     if (_isLogin) {
       // --- LOGIN FLOW (Unchanged) ---
-      // 1. User logs in
-      // 2. App checks Firestore for their role (Customer, Driver, or Admin)
-      // 3. App navigates them to the correct screen
       result = await _authService.signIn(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        email: email,
+        password: password,
       );
 
       if (result == 'Customer' || result == 'Driver' || result == 'Admin') {
@@ -41,16 +62,15 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } else {
       // --- REGISTER FLOW (Updated) ---
-      // We FORCE the role to be 'Customer' here.
       result = await _authService.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        role: 'Customer', // <--- HARDCODED SECURITY
-        name: _nameController.text.trim(),
+        email: email,
+        password: password,
+        role: 'Customer',
+        name: name,
+        gender: _selectedGender,
       );
 
       if (result == null) {
-        // Registration success -> Go to Customer Home
         _navigateBasedOnRole('Customer');
       } else {
         _showError(result);
@@ -58,6 +78,36 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  void _forgotPassword() async {
+    final String email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showError("Masukkan email untuk reset password");
+      return;
+    }
+
+    // Basic email validation regex
+    final bool isEmailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    if (!isEmailValid) {
+      _showError("Format email tidak valid");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final String? result = await _authService.resetPassword(email);
+    setState(() => _isLoading = false);
+
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Email reset password telah dikirim"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      _showError(result);
+    }
   }
 
   void _navigateBasedOnRole(String role) {
@@ -115,7 +165,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: const InputDecoration(labelText: "Nama Lengkap", prefixIcon: Icon(Icons.person)),
                           ),
                           const SizedBox(height: 16),
-                          // NOTE: The Role Dropdown is GONE.
+                          _buildGenderSelection(),
+                          const SizedBox(height: 16),
                         ],
 
                         TextField(
@@ -125,9 +176,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 16),
                         TextField(
                           controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(labelText: "Password", prefixIcon: Icon(Icons.lock)),
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            labelText: "Password",
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                          ),
                         ),
+                        if (_isLogin)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _isLoading ? null : _forgotPassword,
+                              child: const Text("Lupa Password?"),
+                            ),
+                          ),
                         const SizedBox(height: 24),
                         SizedBox(
                           width: double.infinity,
@@ -147,6 +216,39 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildGenderSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Jenis Kelamin", style: TextStyle(color: Colors.grey)),
+        Row(
+          children: [
+            Expanded(
+              child: ListTile(
+                title: const Text("L", style: TextStyle(fontSize: 14)),
+                leading: Radio<String>(
+                  value: 'Laki-laki',
+                  groupValue: _selectedGender,
+                  onChanged: (value) => setState(() => _selectedGender = value!),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListTile(
+                title: const Text("P", style: TextStyle(fontSize: 14)),
+                leading: Radio<String>(
+                  value: 'Perempuan',
+                  groupValue: _selectedGender,
+                  onChanged: (value) => setState(() => _selectedGender = value!),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

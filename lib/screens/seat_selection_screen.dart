@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/route_model.dart';
 import '../services/booking_service.dart';
@@ -14,18 +16,29 @@ class SeatSelectionScreen extends StatefulWidget {
 class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   final BookingService _bookingService = BookingService();
   final Set<int> _selectedSeats = {};
+  String _userGender = 'Laki-laki';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserGender();
+  }
+
+  void _fetchUserGender() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists && mounted) {
+        setState(() {
+          _userGender = doc.data()?['gender'] ?? 'Laki-laki';
+        });
+      }
+    }
+  }
 
   List<List<int>> get _seatLayout {
     if (widget.route.isWisata) {
-      // Wisata configuration: 1-3-3 (Total 7 seats)
-      // 0 means empty space to align seat 1 to the left
-      return [
-        [1, 0, 0],
-        [2, 3, 4],
-        [5, 6, 7],
-      ];
-    } else {
-      // Travel configuration: 2-3-4-3-3-4 (Total 19 seats)
+      // Wisata configuration: 2-3-4-3-3-4 (Total 19 seats)
       // 0 means empty space to align seats appropriately (creating an aisle)
       return [
         [1, 2, 0, 0],
@@ -35,14 +48,22 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
         [13, 14, 15, 0],
         [16, 17, 18, 19],
       ];
+    } else {
+      // Travel configuration: 1-3-3 (Total 7 seats)
+      // 0 means empty space to align seat 1 to the left
+      return [
+        [1, 0, 0],
+        [2, 3, 4],
+        [5, 6, 7],
+      ];
     }
   }
 
   bool _isFemaleSeat(int seatNumber) {
     if (widget.route.isWisata) {
-      return seatNumber <= 4; // First 4 seats for female (Row 1 & 2)
-    } else {
       return seatNumber <= 9; // First 9 seats for female (Row 1 to 3)
+    } else {
+      return seatNumber <= 4; // First 4 seats for female (Row 1 & 2)
     }
   }
 
@@ -51,7 +72,9 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Pilih Kursi - ${widget.route.fromCity} ke ${widget.route.toCity}",
+          widget.route.isWisata
+              ? "Pilih Kursi - ${widget.route.toCity}"
+              : "Pilih Kursi - ${widget.route.fromCity} ke ${widget.route.toCity}",
           style: const TextStyle(fontSize: 16),
         ),
       ),
@@ -68,8 +91,8 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: StreamBuilder<List<int>>(
-                stream: _bookingService.getBookedSeatsStream(widget.route.id),
+              child: StreamBuilder<Map<int, String>>(
+                stream: _bookingService.getBookedSeatsWithGenderStream(widget.route.id),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -79,22 +102,15 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   }
 
-                  final bookedSeats = snapshot.data ?? [];
+                  final bookedSeatsMap = snapshot.data ?? {};
 
-                  // Remove locally selected seats if they were booked by someone else
-                  final toRemove = _selectedSeats.where((seat) => bookedSeats.contains(seat)).toList();
+                  // Silently remove locally selected seats if they were booked by someone else
+                  final toRemove = _selectedSeats.where((seat) => bookedSeatsMap.containsKey(seat)).toList();
                   if (toRemove.isNotEmpty) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      setState(() {
-                        _selectedSeats.removeAll(toRemove);
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Kursi yang Anda pilih baru saja dipesan.")),
-                      );
-                    });
+                    _selectedSeats.removeAll(toRemove);
                   }
 
-                  return _buildSeatGrid(bookedSeats);
+                  return _buildSeatGrid(bookedSeatsMap);
                 },
               ),
             ),
@@ -128,10 +144,10 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     );
   }
 
-  Widget _buildSeatGrid(List<int> bookedSeats) {
+  Widget _buildSeatGrid(Map<int, String> bookedSeatsWithGender) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        int maxSeatsInRow = widget.route.isWisata ? 3 : 4;
+        int maxSeatsInRow = widget.route.isWisata ? 4 : 3;
         double spacing = 10.0;
         
         // Calculate seat size based on the max seats in a row
@@ -156,7 +172,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
 
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: spacing / 2),
-                      child: _buildSeat(seatNumber, bookedSeats, seatSize),
+                      child: _buildSeat(seatNumber, bookedSeatsWithGender, seatSize),
                     );
                   }).toList(),
                 ),
@@ -168,10 +184,11 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     );
   }
 
-  Widget _buildSeat(int seatNumber, List<int> bookedSeats, double size) {
-    final isBooked = bookedSeats.contains(seatNumber);
+  Widget _buildSeat(int seatNumber, Map<int, String> bookedSeatsWithGender, double size) {
+    final isBooked = bookedSeatsWithGender.containsKey(seatNumber);
     final isSelected = _selectedSeats.contains(seatNumber);
-    final isFemale = _isFemaleSeat(seatNumber);
+    final isFemaleArea = _isFemaleSeat(seatNumber);
+    final bookedGender = bookedSeatsWithGender[seatNumber];
 
     int status = 0; // 0=Available
     if (isBooked) {
@@ -179,6 +196,8 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     } else if (isSelected) {
       status = 1; // 1=Selected
     }
+
+    final bool isUserFemale = _userGender == 'Perempuan';
 
     return GestureDetector(
       onTap: () {
@@ -196,11 +215,11 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: _getSeatColor(status, isFemale),
+          color: _getSeatColor(status, isFemaleArea, isUserFemale, bookedGender),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected 
-                ? (isFemale ? Colors.pink[800]! : Colors.blue[800]!)
+                ? (isUserFemale ? Colors.pink[800]! : Colors.blue[800]!)
                 : Colors.grey[300]!,
             width: isSelected ? 2 : 1,
           ),
@@ -211,7 +230,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
             children: [
               Icon(
                 Icons.chair,
-                color: status == 1 ? Colors.white : Colors.grey[600],
+                color: (status == 1 || status == 2) ? Colors.white : Colors.grey[600],
                 size: size * 0.35,
               ),
               const SizedBox(height: 4),
@@ -220,7 +239,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                 style: TextStyle(
                   fontSize: size * 0.25,
                   fontWeight: FontWeight.bold,
-                  color: status == 1 ? Colors.white : Colors.grey[800],
+                  color: (status == 1 || status == 2) ? Colors.white : Colors.grey[800],
                 ),
               ),
             ],
@@ -230,10 +249,13 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     );
   }
 
-  Color _getSeatColor(int status, bool isFemale) {
-    if (status == 2) return Colors.grey[300]!; // Booked
-    if (status == 1) return isFemale ? Colors.pink[500]! : Colors.blue[500]!; // Selected
-    return isFemale ? Colors.pink[50]! : Colors.blue[50]!; // Available
+  Color _getSeatColor(int status, bool isFemaleArea, bool isUserFemale, String? bookedGender) {
+    if (status == 2) {
+      // Booked: Color based on the gender of the person who booked it
+      return (bookedGender == 'Perempuan') ? Colors.pink[200]! : Colors.blue[200]!;
+    }
+    if (status == 1) return isUserFemale ? Colors.pink[500]! : Colors.blue[500]!; // Selected
+    return Colors.green[50]!; // Available is now green
   }
 
   Widget _buildLegend() {
@@ -242,11 +264,11 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
       runSpacing: 12,
       alignment: WrapAlignment.center,
       children: [
-        _legendItem(Colors.pink[50]!, "Tersedia (P)"),
-        _legendItem(Colors.blue[50]!, "Tersedia (L)"),
+        _legendItem(Colors.green[50]!, "Tersedia"),
         _legendItem(Colors.pink[500]!, "Terpilih (P)"),
         _legendItem(Colors.blue[500]!, "Terpilih (L)"),
-        _legendItem(Colors.grey[300]!, "Dipesan"),
+        _legendItem(Colors.pink[200]!, "Dipesan (P)"),
+        _legendItem(Colors.blue[200]!, "Dipesan (L)"),
       ],
     );
   }

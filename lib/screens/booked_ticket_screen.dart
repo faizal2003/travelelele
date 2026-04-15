@@ -74,6 +74,7 @@ class TicketBookedScreen extends StatelessWidget {
         // Extract fields based on your Firestore structure
         final fromCity = data['fromCity'] ?? 'Unknown';
         final toCity = data['toCity'] ?? 'Unknown';
+        final isWisata = data['isWisata'] ?? false;
         final departTime = data['departTime'] ?? '--:--';
         final arriveTime = data['arriveTime'] ?? '--:--';
         final status = data['status'] ?? 'Unknown';
@@ -105,7 +106,7 @@ class TicketBookedScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '$fromCity → $toCity',
+                        isWisata ? toCity : '$fromCity → $toCity',
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),

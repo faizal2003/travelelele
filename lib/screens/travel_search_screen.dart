@@ -295,10 +295,10 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
   }
 
   Widget _buildRouteCard(BuildContext context, TravelRoute route) {
-    return StreamBuilder<List<int>>(
-      stream: _bookingService.getBookedSeatsStream(route.id),
+    return StreamBuilder<Map<int, String>>(
+      stream: _bookingService.getBookedSeatsWithGenderStream(route.id),
       builder: (context, snapshot) {
-        int totalCapacity = route.isWisata ? 7 : 19;
+        int totalCapacity = route.isWisata ? 19 : 7;
         int availableSeats = totalCapacity;
 
         if (snapshot.hasData) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
@@ -27,11 +28,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Save Changes
   void _saveProfile() async {
+    String name = _nameController.text.trim();
+    String phone = _phoneController.text.trim();
+
+    if (name.isEmpty || phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mohon lengkapi semua data"), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (name.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Nama terlalu pendek (min 3 karakter)"), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (phone.length < 10 || phone.length > 13) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Nomor telepon tidak valid (10-13 digit)"), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     String? error = await _authService.updateUserProfile(
-      name: _nameController.text.trim(),
-      phone: _phoneController.text.trim(),
+      name: name,
+      phone: phone,
     );
 
     setState(() {
@@ -113,9 +138,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 32),
 
                 // --- FORM FIELDS ---
-                _buildTextField("Full Name", _nameController, Icons.person),
+                _buildTextField(
+                  "Full Name",
+                  _nameController,
+                  Icons.person,
+                  formatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                  keyboardType: TextInputType.name,
+                ),
                 const SizedBox(height: 16),
-                _buildTextField("Phone Number", _phoneController, Icons.phone),
+                _buildTextField(
+                  "Phone Number",
+                  _phoneController,
+                  Icons.phone,
+                  formatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(13),
+                  ],
+                  keyboardType: TextInputType.phone,
+                ),
 
                 const SizedBox(height: 32),
 
@@ -166,18 +206,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildTextField(
     String label,
     TextEditingController controller,
-    IconData icon,
-  ) {
+    IconData icon, {
+    List<TextInputFormatter>? formatters,
+    TextInputType? keyboardType,
+  }) {
     return TextField(
       controller: controller,
       enabled: _isEditing, // Disable input if not in edit mode
+      inputFormatters: formatters,
+      keyboardType: keyboardType,
+      textCapitalization: label == "Full Name" ? TextCapitalization.words : TextCapitalization.none,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: !_isEditing,
-        fillColor: Colors.grey[100],
+        fillColor: _isEditing ? Colors.transparent : Colors.grey[100],
       ),
     );
   }
 }
+
