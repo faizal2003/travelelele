@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'profile_screen.dart';
 
 class DriverDashboard extends StatelessWidget {
   const DriverDashboard({super.key});
@@ -91,17 +92,7 @@ class DriverDashboard extends StatelessWidget {
               ),
             ),
             
-            // Stats Section
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                children: [
-                  _buildStatCard("Trip Selesai", "12", Icons.done_all, Colors.green),
-                  const SizedBox(width: 16),
-                  _buildStatCard("Total Jam", "48h", Icons.timer, Colors.orange),
-                ],
-              ),
-            ),
+            const SizedBox(height: 32),
 
             // Main Menu
             Padding(
@@ -114,44 +105,17 @@ class DriverDashboard extends StatelessWidget {
                 crossAxisSpacing: 16,
                 childAspectRatio: 1.1,
                 children: [
-                  _driverMenu(Icons.qr_code_scanner, "Scan\nTiket", Colors.blue, () => _simulateScan(context)),
-                  _driverMenu(Icons.calendar_today, "Jadwal\nHari Ini", Colors.indigo, () {}),
-                  _driverMenu(Icons.map, "Peta\nRute", Colors.teal, () {}),
-                  _driverMenu(Icons.history, "Riwayat\nPerjalanan", Colors.brown, () {}),
-                  _driverMenu(Icons.car_repair, "Status\nUnit", Colors.amber[800]!, () {}),
-                  _driverMenu(Icons.chat, "Bantuan\nAdmin", Colors.grey[700]!, () {}),
+                  _driverMenu(Icons.qr_code_scanner, "Scan Barcode\nTiket", Colors.blue, () => _simulateScan(context)),
+                  _driverMenu(Icons.map, "Maps\nPengguna", Colors.teal, () {}),
+                  _driverMenu(Icons.people, "Biodata\nPenumpang", Colors.orange, () {}),
+                  _driverMenu(Icons.person, "Profile\nDriver", Colors.indigo, () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+                  }),
+                  _driverMenu(Icons.exit_to_app, "Logout /\nSesi Login", Colors.red, () => _logout(context)),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              ],
-            ),
           ],
         ),
       ),

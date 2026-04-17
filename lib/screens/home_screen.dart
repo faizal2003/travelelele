@@ -52,7 +52,7 @@ class HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Smart Travel"),
+        title: const Text("SVARGADWIPA"),
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Icons.notifications)),
         ],

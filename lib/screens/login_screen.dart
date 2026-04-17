@@ -144,9 +144,9 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.flight_takeoff, size: 80, color: Colors.white),
+                  Image.asset('lib/images/logo_new.png', height: 120),
                   const SizedBox(height: 16),
-                  const Text("Smart Travel",
+                  const Text("SVARGADWIPA",
                       style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
                   const SizedBox(height: 40),
                   Container(
