@@ -25,17 +25,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
   final BookingService _bookingService = BookingService();//kirim data servis database
   bool _isLoading = false;
 
+  String? _bookingId;
+
   void _processPayment(int totalPrice) async {
     setState(() => _isLoading = true);
     //ambil data booking service, validasi terakhir
     try {
-      await _bookingService.createBooking(
+      final bookingId = await _bookingService.createBooking(
         route: widget.route,
         selectedSeats: widget.selectedSeats,
         passengerNames: widget.passengerNames,
         passengerPhones: widget.passengerPhones,
         totalPrice: totalPrice,
       );
+
+      setState(() {
+        _bookingId = bookingId;
+      });
 
       if (!mounted) return;
 
@@ -119,6 +125,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
   //navigasi ke tiket screen, setelah pemesanan berhasil
   void _navigateToTicket() {
+    if (_bookingId == null) return;
+    
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
@@ -126,6 +134,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           route: widget.route,
           selectedSeats: widget.selectedSeats,
           passengerNames: widget.passengerNames,
+          ticketId: _bookingId!,
         ),
       ),
       (route) => false,

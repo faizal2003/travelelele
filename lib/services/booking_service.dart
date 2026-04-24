@@ -30,7 +30,7 @@ class BookingService {
   }
 
   // menyimpan booking dengan gender
-  Future<void> createBooking({//fungsi membuat pemesanan tiket baru.
+  Future<String> createBooking({//fungsi membuat pemesanan tiket baru.
     required TravelRoute route,
     required List<int> selectedSeats,
     required List<String> passengerNames,
@@ -54,7 +54,7 @@ class BookingService {
       });
     }
 
-    await _firestore.collection('bookings').add({ //akses firestore
+    final docRef = await _firestore.collection('bookings').add({ //akses firestore
       'userId': user.uid,
       'userGender': userGender,
       'routeId': route.id,
@@ -69,5 +69,32 @@ class BookingService {
       'status': 'paid',
       'createdAt': FieldValue.serverTimestamp(),//memberikan waktu yang diatur
     });
+
+    return docRef.id;
+  }
+
+  // Validasi dan gunakan tiket (invalidate)
+  Future<Map<String, dynamic>> validateAndUseTicket(String ticketId) async {
+    final docRef = _firestore.collection('bookings').doc(ticketId);
+    final doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw Exception("Tiket tidak ditemukan");
+    }
+
+    final data = doc.data()!;
+    final status = data['status'] ?? 'Unknown';
+
+    if (status != 'paid') {
+      throw Exception("Tiket sudah tidak valid atau sudah digunakan (Status: $status)");
+    }
+
+    // Update status menjadi 'used' untuk menginvalidasi tiket
+    await docRef.update({
+      'status': 'used',
+      'usedAt': FieldValue.serverTimestamp(),
+    });
+
+    return data;
   }
 }

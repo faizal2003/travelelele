@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
   final Map<String, dynamic> ticketData;
@@ -39,6 +40,8 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
             _buildTicketHeader(fromCity, toCity, status, isWisata), //menampilkan header tiket, mencakup informasi
             const SizedBox(height: 24),
             _buildTripInfo(departTime, arriveTime, seats), //menampilkan informasi perjalanan
+            const SizedBox(height: 24),
+            _buildQrSection(ticketId),
             const SizedBox(height: 24),
             _buildPassengerList(passengers), //menampilkan daftar penumpang
             const SizedBox(height: 24),
@@ -184,6 +187,45 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
       ],
     );
   }
+
+  Widget _buildQrSection(String ticketId) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text(
+            "QR Tiket",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: QrImageView(
+              data: ticketId,
+              version: QrVersions.auto,
+              size: 200.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Tunjukkan QR ini kepada petugas",
+            style: TextStyle(color: Colors.grey, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
   //container daftar penumpang
   Widget _buildPassengerList(List<Map<String, dynamic>> passengers) {
     return Container(

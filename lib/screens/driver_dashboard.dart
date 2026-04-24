@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
+import 'qr_scanner_screen.dart';
 
 class DriverDashboard extends StatelessWidget {
   const DriverDashboard({super.key});
@@ -16,38 +17,14 @@ class DriverDashboard extends StatelessWidget {
       (route) => false,
     );
   }
-  //pemindaian scan penumpang
-  void _simulateScan(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 8),
-            Text("Scan Berhasil"),
-          ],
-        ),
-        //validasi scan
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Penumpang: Budi Santoso", style: TextStyle(fontWeight: FontWeight.bold)),
-            Text("Seat: B3"),
-            Text("Rute: Jakarta → Bandung"),
-            SizedBox(height: 8),
-            Text("Status: VALID", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        //button tutup
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Tutup")),
-        ],
-      ),
+  
+  void _openScanner(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const QrScannerScreen()),
     );
   }
+
   //judul appbar
   @override
   Widget build(BuildContext context) {
@@ -111,7 +88,7 @@ class DriverDashboard extends StatelessWidget {
                 crossAxisSpacing: 16,//spasi 16 px verti
                 childAspectRatio: 1.1,
                 children: [
-                  _driverMenu(Icons.qr_code_scanner, "Scan Barcode\nTiket", Colors.blue, () => _simulateScan(context)),
+                  _driverMenu(Icons.qr_code_scanner, "Scan Barcode\nTiket", Colors.blue, () => _openScanner(context)),
                   _driverMenu(Icons.map, "Maps\nPengguna", Colors.teal, () {}),
                   _driverMenu(Icons.people, "Biodata\nPenumpang", Colors.orange, () {}),
                   _driverMenu(Icons.person, "Profile\nDriver", Colors.indigo, () {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../models/route_model.dart';
 import 'home_screen.dart';
 
@@ -6,6 +7,7 @@ class TicketScreen extends StatelessWidget {
   final TravelRoute route;
   final List<int> selectedSeats;
   final List<String> passengerNames;
+  final String ticketId;
 
 //menampilkan tiket perjalanan
   const TicketScreen({
@@ -13,6 +15,7 @@ class TicketScreen extends StatelessWidget {
     required this.route,
     required this.selectedSeats,
     required this.passengerNames,
+    required this.ticketId,
   });
 
   @override
@@ -49,6 +52,7 @@ class TicketScreen extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   const Divider(height: 30),
+                  _buildTicketRow("ID Tiket", ticketId),
                   _buildTicketRow("Penumpang", passengerNames.join(", ")),
                   _buildTicketRow(
                     "Rute",
@@ -60,7 +64,11 @@ class TicketScreen extends StatelessWidget {
                   ),
                   _buildTicketRow("Kursi", selectedSeats.join(", ")),
                   const Divider(height: 30),
-                  const Icon(Icons.qr_code, size: 120),
+                  QrImageView(
+                    data: ticketId,
+                    version: QrVersions.auto,
+                    size: 150.0,
+                  ),
                   const SizedBox(height: 10),
                   const Text(
                     "Scan Masuk Gate",
