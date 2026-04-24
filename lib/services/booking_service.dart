@@ -6,17 +6,17 @@ class BookingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Listen to booked seats for a specific route with gender info
+  // menyimpan kursi yang sudah dipesan, dengan gender
   Stream<Map<int, String>> getBookedSeatsWithGenderStream(String routeId) {
-    return _firestore
+    return _firestore //ambil data booking di firestore
         .collection('bookings')
-        .where('routeId', isEqualTo: routeId)
-        .where('status', isEqualTo: 'paid')
+        .where('routeId', isEqualTo: routeId) //Menyaring data hanya mengambil pemesanan
+        .where('status', isEqualTo: 'paid')//ambil paid
         .snapshots()
         .map((snapshot) {
-      Map<int, String> bookedSeats = {};
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
+      Map<int, String> bookedSeats = {}; //Menyimpan nomor kursi dipesan dan gender pengguna
+      for (var doc in snapshot.docs) { //iterasi pengulangan berisi pemesanan kursi
+        final data = doc.data(); //menyimpan informasi pemesanan
         final gender = data['userGender'] ?? 'Laki-laki';
         if (data['seats'] != null) {
           final seats = List<int>.from(data['seats']);
@@ -29,24 +29,24 @@ class BookingService {
     });
   }
 
-  // Save the booking with user gender
-  Future<void> createBooking({
+  // menyimpan booking dengan gender
+  Future<void> createBooking({//fungsi membuat pemesanan tiket baru.
     required TravelRoute route,
     required List<int> selectedSeats,
     required List<String> passengerNames,
     required List<String> passengerPhones,
     required int totalPrice,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth.currentUser; //ambil data pengguna yg login
     if (user == null) throw Exception("User not logged in");
 
-    // Fetch user gender
-    final userDoc = await _firestore.collection('users').doc(user.uid).get();
+
+    final userDoc = await _firestore.collection('users').doc(user.uid).get(); //ambil data firestore
     final userGender = userDoc.data()?['gender'] ?? 'Laki-laki';
 
-    // Combine passengers details for easier querying
-    List<Map<String, dynamic>> passengers = [];
-    for (int i = 0; i < selectedSeats.length; i++) {
+    //
+    List<Map<String, dynamic>> passengers = []; //membuat list
+    for (int i = 0; i < selectedSeats.length; i++) { //looping
       passengers.add({
         'seat': selectedSeats[i],
         'name': passengerNames[i],
@@ -54,7 +54,7 @@ class BookingService {
       });
     }
 
-    await _firestore.collection('bookings').add({
+    await _firestore.collection('bookings').add({ //akses firestore
       'userId': user.uid,
       'userGender': userGender,
       'routeId': route.id,
@@ -67,7 +67,7 @@ class BookingService {
       'passengers': passengers,
       'totalPrice': totalPrice,
       'status': 'paid',
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': FieldValue.serverTimestamp(),//memberikan waktu yang diatur
     });
   }
 }

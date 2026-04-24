@@ -6,6 +6,7 @@ import 'ticket_detail_screen.dart'; // Import the newly created detail screen
 class TicketBookedScreen extends StatelessWidget {
   const TicketBookedScreen({Key? key}) : super(key: key);
 
+  //mengambil ID pengguna yang sedang login dari Firebase Authentication (uid).
   @override
   Widget build(BuildContext context) {
     // Get the current logged-in user's ID
@@ -14,25 +15,30 @@ class TicketBookedScreen extends StatelessWidget {
     if (currentUserId == null) {
       return const Center(child: Text("Please log in to view tickets."));
     }
-
     return Scaffold(
+      //untuk judul tiket
       appBar: AppBar(
-        title: const Text('My Tickets'),
+        title: const Text('Tickets'),
         centerTitle: true,
       ),
+
+      //Menampilkan daftar pemesanan (booking) urut terbaru
       body: StreamBuilder<QuerySnapshot>(
-        // Query the 'bookings' collection for this user
         stream: FirebaseFirestore.instance
             .collection('bookings')
             .where('userId', isEqualTo: currentUserId)
             .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
+
           if (snapshot.hasError) {
-            // Because Firestore requires an index when ordering alongside a where query on different fields,
-            // we'll handle the case where the index isn't ready.
+            //menangani error yang mungkin terjadi, indeks untuk melakukan pengurutan data
+
             if (snapshot.error.toString().contains('FAILED_PRECONDITION')) {
-              // Fallback query without sorting if index is missing
+              //Jika indeks yang diperlukan belum tersedia (dengan kesalahan FAILED_PRECONDITION),
+              // aplikasi akan menampilkan data tanpa pengurutan terlebih dahulu sebagai alternatif.
+
+              //Menampilkan daftar pemesanan (booking) tanpa pengurutan
               return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('bookings')
@@ -51,27 +57,32 @@ class TicketBookedScreen extends StatelessWidget {
       ),
     );
   }
+//pengambilan data dari Firestore untuk menampilkan daftar tiket yang dipesan oleh pengguna yang sedang login.
 
+  //cek koneksi, nunggu data dari firestore
   Widget _buildTicketList(BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // ambil data booking dari firestore
     final bookings = snapshot.data?.docs ?? [];
 
+    //jika data kosong- no tiket
     if (bookings.isEmpty) {
       return const Center(child: Text('No tickets found.'));
     }
 
-    // Build a list of tickets
+    //menampilkan daftar tiket
     return ListView.builder(
       itemCount: bookings.length,
       padding: const EdgeInsets.all(16),
       itemBuilder: (context, index) {
+        //ambil tiket data firestore
         final doc = bookings[index];
         final data = doc.data() as Map<String, dynamic>;
 
-        // Extract fields based on your Firestore structure
+        // mengekstrak data dari firestore
         final fromCity = data['fromCity'] ?? 'Unknown';
         final toCity = data['toCity'] ?? 'Unknown';
         final isWisata = data['isWisata'] ?? false;
@@ -80,6 +91,8 @@ class TicketBookedScreen extends StatelessWidget {
         final status = data['status'] ?? 'Unknown';
         final seats = List<int>.from(data['seats'] ?? []);
 
+        //membuat tampilan daftar tiket dalam bentuk kartu yang dapat diketuk.
+        //Saat kartu diklik, pengguna diarahkan ke layar detail tiket
         return Card(
           elevation: 3,
           margin: const EdgeInsets.only(bottom: 16),
@@ -99,17 +112,21 @@ class TicketBookedScreen extends StatelessWidget {
             },
             child: Padding(
               padding: const EdgeInsets.all(16.0),
+              //Column & row agar menyusun elemen terstruktur.
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      //menampilkan informasi tentang kota asal dan tujuan atau hanya kota tujuan.
                       Text(
                         isWisata ? toCity : '$fromCity → $toCity',
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
+
+                      //menampilkan status tiket dengan warna yang berbeda untuk menunjukkan status pembayaran (paid).
                       Chip(
                         label: Text(
                           status.toUpperCase(),
@@ -127,14 +144,14 @@ class TicketBookedScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const Divider(),
+                  const Divider(),//rute,status/ waktu, kursi
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildInfoColumn('Depart', departTime),
-                      _buildInfoColumn('Arrive', arriveTime),
-                      _buildInfoColumn('Seats', seats.join(', ')),
+                      _buildInfoColumn('Depart', departTime),//waktu keberangkatan
+                      _buildInfoColumn('Arrive', arriveTime),//waktu sampai
+                      _buildInfoColumn('Seats', seats.join(', ')),//daftar kursi yang dipilih
                     ],
                   ),
                 ],

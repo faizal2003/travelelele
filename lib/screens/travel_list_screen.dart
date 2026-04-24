@@ -5,6 +5,7 @@ import 'detail_screen.dart';
 class TravelListScreen extends StatelessWidget {
   const TravelListScreen({super.key});
 
+//travel
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,6 +24,7 @@ class TravelListScreen extends StatelessWidget {
                   shadows: [Shadow(blurRadius: 10, color: Colors.black)],
                 ),
               ),
+              //mengatur gambar latar belakang di halaman dengan Image.mengambil gambar dari URL
               background: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -30,6 +32,7 @@ class TravelListScreen extends StatelessWidget {
                     "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
                     fit: BoxFit.cover,
                   ),
+                  //gradasi gambar
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -46,6 +49,7 @@ class TravelListScreen extends StatelessWidget {
               ),
             ),
           ),
+          //padding
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
@@ -75,6 +79,7 @@ class TravelListScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            //melengkung pada gambar atas bagian wisata
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
@@ -84,6 +89,7 @@ class TravelListScreen extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
+            //menampilkan rating wisata
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -107,6 +113,7 @@ class TravelListScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  //menampilkan harga perjalanan
                   const SizedBox(height: 8),
                   Text(
                     trip.price,

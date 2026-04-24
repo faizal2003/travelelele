@@ -1,5 +1,5 @@
 class TravelRoute {
-  final String id;
+  final String id; //properti
   final String fromCity;
   final String toCity;
   final String departTime;
@@ -8,7 +8,7 @@ class TravelRoute {
   final int seatsAvailable;
   final bool isWisata;
 
-  TravelRoute({
+  TravelRoute({ //konstruktor
     required this.id,
     required this.fromCity,
     required this.toCity,
@@ -20,7 +20,7 @@ class TravelRoute {
   });
 }
 
-// Dummy Data
+// Dummy Data mewakili berbagai rute perjalanan
 final List<TravelRoute> dummyRoutes = [
   TravelRoute(
     id: '1',

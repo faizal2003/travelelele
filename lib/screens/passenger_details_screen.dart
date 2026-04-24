@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/route_model.dart';
 import '../services/auth_service.dart';
 import 'payment_screen.dart';
-
+//detail kursi penumpang
 class PassengerDetailsScreen extends StatefulWidget {
   final TravelRoute route;
   final List<int> selectedSeats;
@@ -29,7 +29,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
   void initState() {
     super.initState();
     // Initialize controllers for each seat
-    for (int i = 0; i < widget.selectedSeats.length; i++) {
+    for (int i = 0; i < widget.selectedSeats.length; i++) { //looping
       _nameControllers.add(TextEditingController());
       _phoneControllers.add(TextEditingController());
     }
@@ -46,16 +46,17 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
     }
     super.dispose();
   }
-
+  //data pengguna
   Future<void> _loadUserData() async {
     try {
       final userStream = _authService.getUserStream();
-      final snapshot = await userStream.first; // Get current state exactly once for pre-fill
+      final snapshot = await userStream.first; //mengambil data user yg login
 
       if (snapshot.exists) {
+        //ambil data pengguna
         final data = snapshot.data() as Map<String, dynamic>;
         setState(() {
-          // Pre-fill only the first passenger's info
+          //memastikan data yang sudah ada "nama dan telf" diisi otomatis ke form sebelum melanjutkan proses selanjutnya.
           if (_nameControllers.isNotEmpty) {
             _nameControllers[0].text = data['name'] ?? '';
             _phoneControllers[0].text = data['phone'] ?? '';
@@ -69,6 +70,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
     }
   }
 
+  //validasi data pengguna, dan pesan kesalahan
   void _proceedToPayment() {
     String? errorMessage;
 
@@ -91,7 +93,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
         break;
       }
     }
-
+    //pesan error
     if (errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
@@ -99,6 +101,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
       return;
     }
 
+    //ambil data diteruskan ke pembayaran
     List<String> names = _nameControllers.map((c) => c.text.trim()).toList();
     List<String> phones = _phoneControllers.map((c) => c.text.trim()).toList();
 
@@ -115,6 +118,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
     );
   }
 
+  //tampilan halaman data penumpang
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,6 +131,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
                   padding: const EdgeInsets.all(24.0),
                   child: _buildRouteSummary(),
                 ),
+                //tampilan daftar kursi ui
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -141,6 +146,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey[300]!),
                         ),
+                        //informasi nomor penumpang dan kursi
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -151,6 +157,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            //kolom input nama
                             const SizedBox(height: 16),
                             TextField(
                               controller: _nameControllers[index],
@@ -165,6 +172,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
                               ],
                               textCapitalization: TextCapitalization.words,
                             ),
+                            //kolom input nomor telf
                             const SizedBox(height: 16),
                             TextField(
                               controller: _phoneControllers[index],
@@ -186,6 +194,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
                     },
                   ),
                 ),
+                //lanjut pembayaran
                 Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: SizedBox(
@@ -203,7 +212,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
             ),
     );
   }
-
+  //detail rute atas
   Widget _buildRouteSummary() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -212,6 +221,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.blue[100]!),
       ),
+      //rute darimana ke mana
       child: Column(
         children: [
           Row(
@@ -228,6 +238,7 @@ class _PassengerDetailsScreenState extends State<PassengerDetailsScreen> {
               ),
             ],
           ),
+          //kursi yang dipilih
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

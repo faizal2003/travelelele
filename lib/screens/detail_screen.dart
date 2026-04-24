@@ -26,7 +26,7 @@ class DetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    trip.title,
+                    trip.title,//judul perjalanan
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -34,13 +34,15 @@ class DetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    trip.price,
+                    trip.price,//menampilkan harga trip dari trip price
                     style: const TextStyle(
                       fontSize: 20,
                       color: Colors.orange,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
+                  //deskripsi bawah harga perjalanan
                   const SizedBox(height: 16),
                   const Text(
                     "Description",
@@ -52,22 +54,24 @@ class DetailScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.grey),
                   ),
                   const Spacer(),
+
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Create a dummy route from the trip details
+                        // detail rute perjalanan
                         final route = TravelRoute(
                           id: 'trip-${trip.title.hashCode}',
                           fromCity: 'Jakarta', // Default
                           toCity: trip.title,
                           departTime: '08:00',
                           arriveTime: '18:00',
-                          price: trip.price,
+                          price: trip.price, //harga
                           seatsAvailable: 19,
                           isWisata: true,
                         );
 
+                        //pindah kelayar navigasi seterusnya
                         Navigator.push(
                           context,
                           MaterialPageRoute(

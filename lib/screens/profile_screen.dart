@@ -12,13 +12,14 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService(); // mengambil nilai teks saat mengedit profil
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  bool _isEditing = false;
-  bool _isLoading = false;
+  bool _isEditing = false; //edit?
+  bool _isLoading = false; //loading?
 
+  //hapus data sebelumnya
   @override
   void dispose() {
     _nameController.dispose();
@@ -26,32 +27,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // Save Changes
+  // Mengambil teks yang dimasukkan
   void _saveProfile() async {
     String name = _nameController.text.trim();
     String phone = _phoneController.text.trim();
 
+    //jika masih kosong
     if (name.isEmpty || phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Mohon lengkapi semua data"), backgroundColor: Colors.red),
       );
       return;
     }
-
+    //jika tidak memenuhi syarat
     if (name.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Nama terlalu pendek (min 3 karakter)"), backgroundColor: Colors.red),
       );
       return;
     }
-
+    //no telpon harus 10-13
     if (phone.length < 10 || phone.length > 13) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Nomor telepon tidak valid (10-13 digit)"), backgroundColor: Colors.red),
       );
       return;
     }
-
+    //memperbarui profile
     setState(() => _isLoading = true);
 
     String? error = await _authService.updateUserProfile(
@@ -59,9 +61,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       phone: phone,
     );
 
+    //memperbarui tampilan
     setState(() {
       _isLoading = false;
-      if (error == null) {
+      if (error == null) { //periksa error
         _isEditing = false;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -69,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             backgroundColor: Colors.green,
           ),
         );
-      } else {
+      } else { //cek error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(error), backgroundColor: Colors.red),
         );
@@ -88,34 +91,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  //menampilkan bagian atas layar Profile judul dan tombol logout
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Profile"),
+        title: const Text("Profile"),
         actions: [
           IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         ],
       ),
+      //menyimpan data firestore
       body: StreamBuilder<DocumentSnapshot>(
         stream: _authService.getUserStream(),
         builder: (context, snapshot) {
+          //menangani status koneksi
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
+          //menangani kesalahan
           if (snapshot.hasError) {
             return const Center(child: Text("Error loading profile"));
           }
-
+          //menangani data tidak ada
           if (!snapshot.hasData || !snapshot.data!.exists) {
             return const Center(child: Text("User not found"));
           }
 
-          // Get Data from Firestore
+          //ambil data dari firestore
           var userData = snapshot.data!.data() as Map<String, dynamic>;
 
-          // Only update controllers if NOT editing (to avoid overwriting user input)
+          //ambil data nama, nomor telpon pada firestore
           if (!_isEditing) {
             _nameController.text = userData['name'] ?? '';
             _phoneController.text = userData['phone'] ?? '';
@@ -125,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                const CircleAvatar(
+                const CircleAvatar( //icon lingkaran
                   radius: 50,
                   backgroundColor: Color(0xFF154c79),
                   child: Icon(Icons.person, size: 60, color: Colors.white),
@@ -137,9 +143,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // --- FORM FIELDS ---
+                // form profile
                 _buildTextField(
-                  "Full Name",
+                  "Nama Lengkap",
                   _nameController,
                   Icons.person,
                   formatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
@@ -147,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
-                  "Phone Number",
+                  "Nomor Telpon",
                   _phoneController,
                   Icons.phone,
                   formatters: [
@@ -159,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 32),
 
-                // --- ACTION BUTTONS ---
+                // button cancel & save changes
                 if (_isEditing)
                   Row(
                     children: [
@@ -187,6 +193,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   )
+
+                  //jika cancel kembali edit profile
                 else
                   SizedBox(
                     width: double.infinity,
@@ -202,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
+    //menerima parameter label, controller, icon, formatters, dan keyboardType menyesuaikan input pengguna
   Widget _buildTextField(
     String label,
     TextEditingController controller,

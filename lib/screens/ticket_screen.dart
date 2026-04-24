@@ -7,6 +7,7 @@ class TicketScreen extends StatelessWidget {
   final List<int> selectedSeats;
   final List<String> passengerNames;
 
+//menampilkan tiket perjalanan
   const TicketScreen({
     super.key,
     required this.route,
@@ -18,7 +19,7 @@ class TicketScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("E-Tiket"),
+        title: const Text("E-Tiket"), //judul e tiket
         leading: IconButton(
           icon: const Icon(Icons.home),
           onPressed: () => Navigator.pushReplacement(
@@ -26,7 +27,7 @@ class TicketScreen extends StatelessWidget {
             MaterialPageRoute(builder: (_) => const HomeScreen()),
           ),
         ),
-      ),
+      ), //ui container
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -40,10 +41,11 @@ class TicketScreen extends StatelessWidget {
                   BoxShadow(color: Colors.black12, blurRadius: 10),
                 ],
               ),
+              //form detail booking
               child: Column(
                 children: [
                   const Text(
-                    "Smart Travel Booking",
+                    "Detail Tiket",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   const Divider(height: 30),
@@ -67,6 +69,7 @@ class TicketScreen extends StatelessWidget {
                 ],
               ),
             ),
+            //tombol download tiket
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -83,7 +86,7 @@ class TicketScreen extends StatelessWidget {
       ),
     );
   }
-
+  //membuat baris yang menampilkan informasi, seperti label dan nilai, di halaman tiket.
   Widget _buildTicketRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),

@@ -6,23 +6,23 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Sign Up: Create Account & Save Role
-  Future<String?> signUp({
-    required String email,
+  Future<String?> signUp({ //fungsi
+    required String email, //parameter
     required String password,
     required String role,
     required String name,
     required String gender,
   }) async {
     try {
-      // 1. Create User in Firebase Auth
+      // membuat akun pengguna baru dengan menggunakan email dan password yang diberikan.
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // 2. Save User Data + Role in Firestore
-      await _firestore.collection('users').doc(result.user!.uid).set({
-        'uid': result.user!.uid,
+      //menyimpan semua data pengguna aplikasi
+      await _firestore.collection('users').doc(result.user!.uid).set({ //Menentukan dokumen UID pengguna baru saja login atau mendaftar
+        'uid': result.user!.uid,//parameter
         'email': email,
         'name': name,
         'gender': gender, // "Laki-laki" or "Perempuan"
@@ -36,7 +36,7 @@ class AuthService {
     }
   }
 
-  // Sign In: Login & Fetch Role
+  // Sign In: Login role
   Future<String?> signIn({
     required String email,
     required String password,
@@ -48,12 +48,13 @@ class AuthService {
         password: password,
       );
 
-      // 2. Fetch Role from Firestore
+      // Ambil role dari Firestore
       DocumentSnapshot doc = await _firestore
           .collection('users')
           .doc(result.user!.uid)
           .get();
 
+      //memeriksa apakah dokumen ada di Firestore.
       if (doc.exists) {
         return doc['role']; // Returns "Customer", "Driver", or "Admin"
       } else {
@@ -65,14 +66,14 @@ class AuthService {
   }
 
   // Sign Out
-  Future<void> signOut() async {
+  Future<void> signOut() async { // fungsi ini sifat asynchronous (menggunakan async) dan mengembalikan Future yang tidak memiliki nilai tipe void).
     await _auth.signOut();
   }
 
   // Password Reset
-  Future<String?> resetPassword(String email) async {
+  Future<String?> resetPassword(String email) async { //fungsi
     try {
-      await _auth.sendPasswordResetEmail(email: email);
+      await _auth.sendPasswordResetEmail(email: email); //kirim reset pw
       return null; // Success
     } on FirebaseAuthException catch (e) {
       return e.message;
@@ -81,7 +82,7 @@ class AuthService {
 
   Future<String?> updateUserProfile({required String name, required String phone}) async {
     try {
-      String uid = _auth.currentUser!.uid;
+      String uid = _auth.currentUser!.uid; //memastikan currentUser tidak null,pengguna sudah terautentikasi.
       await _firestore.collection('users').doc(uid).update({
         'name': name,
         'phone': phone, // We will add a phone number field
@@ -95,7 +96,7 @@ class AuthService {
   // Get Current User Stream (Real-time updates)
   Stream<DocumentSnapshot> getUserStream() {
     String uid = _auth.currentUser!.uid;
-    return _firestore.collection('users').doc(uid).snapshots();
+    return _firestore.collection('users').doc(uid).snapshots(); //Mengakses koleksi users di Firestore
   }
 }
 

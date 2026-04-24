@@ -10,7 +10,7 @@ class LoginScreen extends StatefulWidget {
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
-
+//login
 class _LoginScreenState extends State<LoginScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -20,16 +20,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLogin = true;
   bool _isLoading = false;
-  bool _obscurePassword = true;
+  bool _obscurePassword = true;//visibel password
 
-  void _submit() async {
+  void _submit() async { // ambil input
     final String email = _emailController.text.trim();
     final String password = _passwordController.text.trim();
     final String name = _nameController.text.trim();
 
-    // Basic email validation regex
+    // validasi format email
     final bool isEmailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
 
+    //pesan kesalahan
     if (email.isEmpty || password.isEmpty || (!_isLogin && name.isEmpty)) {
       _showError("Mohon lengkapi semua data");
       return;
@@ -44,24 +45,24 @@ class _LoginScreenState extends State<LoginScreen> {
       _showError("Password minimal 6 karakter");
       return;
     }
-
+    //memproses login
     setState(() => _isLoading = true);
     String? result;
 
     if (_isLogin) {
-      // --- LOGIN FLOW (Unchanged) ---
+      // menangani login dalam memverifikasi email dan password melalui metode signIn dari AuthService
       result = await _authService.signIn(
         email: email,
         password: password,
       );
-
+      //pilihan login
       if (result == 'Customer' || result == 'Driver' || result == 'Admin') {
         _navigateBasedOnRole(result!);
       } else {
         _showError(result ?? "Login failed");
       }
     } else {
-      // --- REGISTER FLOW (Updated) ---
+      // jika belum daftar
       result = await _authService.signUp(
         email: email,
         password: password,
@@ -69,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
         name: name,
         gender: _selectedGender,
       );
-
+      //menghentikan proses ketika pengguna salah
       if (result == null) {
         _navigateBasedOnRole('Customer');
       } else {
@@ -80,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) setState(() => _isLoading = false);
   }
 
+  //sinkronisasi lupa password
   void _forgotPassword() async {
     final String email = _emailController.text.trim();
     if (email.isEmpty) {
@@ -87,13 +89,13 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Basic email validation regex
+    // validasi email
     final bool isEmailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
     if (!isEmailValid) {
       _showError("Format email tidak valid");
       return;
     }
-
+    //reset password
     setState(() => _isLoading = true);
     final String? result = await _authService.resetPassword(email);
     setState(() => _isLoading = false);
@@ -109,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _showError(result);
     }
   }
-
+  //navigasi berdasarkan role
   void _navigateBasedOnRole(String role) {
     Widget nextScreen;
     if (role == 'Admin') {
@@ -119,19 +121,20 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       nextScreen = const HomeScreen();
     }
-
+    //nemeruskan slide sesuai role
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => nextScreen),
     );
   }
-
+  //jika ada kesalahan
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
+  //menampilkan halaman login ui
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -219,11 +222,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  //tambahan gender pada pendaftaran
   Widget _buildGenderSelection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Jenis Kelamin", style: TextStyle(color: Colors.grey)),
+        const Text("Gender", style: TextStyle(color: Colors.grey)),
         Row(
           children: [
             Expanded(
@@ -252,6 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  //login/register ui
   Widget _buildTab(String title, bool isLoginTab) {
     bool active = _isLogin == isLoginTab;
     return Expanded(

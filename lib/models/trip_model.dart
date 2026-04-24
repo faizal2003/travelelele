@@ -1,10 +1,10 @@
-class Trip {
+class Trip { //kelas trip
   final String title;
   final String image;
   final String price;
   final double rating;
 
-  Trip({
+  Trip({ //konstruktor
     required this.title,
     required this.image,
     required this.price,
@@ -12,7 +12,7 @@ class Trip {
   });
 }
 
-// Dummy Data
+// Dummy Data (mendefinisikan model perjalanan)
 final List<Trip> trips = [
   Trip(
       title: 'Trip to Bali',

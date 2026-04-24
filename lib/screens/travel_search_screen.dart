@@ -4,43 +4,44 @@ import '../services/booking_service.dart';
 import 'seat_selection_screen.dart'; // We reuse your existing seat selection
 
 class TravelSearchScreen extends StatefulWidget {
-  const TravelSearchScreen({super.key});
+  const TravelSearchScreen({super.key}); //Konstruktor ini menerima parameter key dari super.key
 
   @override
   State<TravelSearchScreen> createState() => _TravelSearchScreenState();
-}
+} //mengelola kondisi atau status (state) dari layar pencarian perjalanan
 
+//yang bertanggung jawab menangani logika
 class _TravelSearchScreenState extends State<TravelSearchScreen> {
-  // Controllers
   final TextEditingController _fromController = TextEditingController(
-    text: "Jakarta",
+    text: "Yogyakarta",
   );
   final TextEditingController _toController = TextEditingController(
-    text: "Bandung",
+    text: "Madiun",
   );
+  //tanggal default
   DateTime _selectedDate = DateTime.now();
   final BookingService _bookingService = BookingService();
 
-  // List to display (starts with all routes, filters later)
+  // menampilkan rute berdasarkan input pengguna
   List<TravelRoute> _displayRoutes = dummyRoutes;
 
-  // Cities for autocomplete
+  //menyimpan hasil pencarian, data dummy.
   final Set<String> _allCities = {};
 
   @override
-  void initState() {
+  void initState() { //posisi default,menampilkan semua jadwal
     super.initState();
-    // Extract unique cities from dummyRoutes
+    // mengekstrak kota dari dummyroutes
     for (var route in dummyRoutes) {
       _allCities.add(route.fromCity);
       _allCities.add(route.toCity);
     }
   }
-
+  //mencari dan memfilter daftar rute perjalanan sesuai yg di input
   void _searchRoutes() {
-    setState(() {
-      _displayRoutes = dummyRoutes.where((route) {
-        return route.fromCity.toLowerCase().contains(
+    setState(() { //fungsi memperbarui state
+      _displayRoutes = dummyRoutes.where((route) { //mencari sesuai inputan
+        return route.fromCity.toLowerCase().contains( //menampilkan teks yang dimasukkan pengguna.
               _fromController.text.toLowerCase(),
             ) &&
             route.toCity.toLowerCase().contains(
@@ -50,19 +51,19 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
     });
   }
 
-  void _swapLocations() {
+  void _swapLocations() { //tukar nilai yang ada di asal ke tujuan
     String temp = _fromController.text;
     _fromController.text = _toController.text;
     _toController.text = temp;
-    _searchRoutes(); // Auto search on swap
+    _searchRoutes();
   }
 
-  Future<void> _pickDate() async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _pickDate() async { //memilih tanggal
+    final DateTime? picked = await showDatePicker( //menampilkan date picker
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2025),
+      firstDate: DateTime.now(),//tgl awal
+      lastDate: DateTime(2025),//Menentukan tanggal akhir yang dapat dipilih.
     );
     if (picked != null && picked != _selectedDate) {
       setState(() => _selectedDate = picked);
@@ -73,7 +74,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F8),
-      appBar: AppBar(
+      appBar: AppBar( //app bar
         title: const Text("Cari Travel"),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
@@ -82,14 +83,15 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
       body: Column(
         children: [
           _buildSearchHeader(),
+          //jika tidak ada rute
           Expanded(
             child: _displayRoutes.isEmpty
                 ? const Center(child: Text("Tidak ada rute tersedia"))
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: _displayRoutes.length,
-                    itemBuilder: (context, index) {
-                      return _buildRouteCard(context, _displayRoutes[index]);
+                    itemBuilder: (context, index) { //
+                      return _buildRouteCard(context, _displayRoutes[index]);//membangun tampilan untuk setiap rute dalam daftar.
                     },
                   ),
           ),
@@ -97,31 +99,32 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
       ),
     );
   }
-
+  //membangun tampilan bagian header pencarian
   Widget _buildSearchHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
+        color: Theme.of(context).primaryColor, //warna serasi tema aplikasi
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Column(
         children: [
-          // FROM & TO INPUTS
+          // asal dan tujuan input
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
+
+            child: Column( //menampilkan widget secara vertikal.
               children: [
-                _buildLocationRow(Icons.my_location, "Dari", _fromController),
+                _buildLocationRow(Icons.my_location, "Dari", _fromController), //menampilkan input asal atau tujuan.
                 const Divider(height: 1, indent: 40),
                 Stack(
                   alignment: Alignment.centerRight,
                   children: [
-                    _buildLocationRow(Icons.location_on, "Ke", _toController),
+                    _buildLocationRow(Icons.location_on, "Ke", _toController), //mengontrol input teks pada kolom tujuan perjalanan
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: IconButton(
@@ -131,6 +134,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
                           size: 32,
                         ),
                         onPressed: _swapLocations,
+                        //Fungsi _swapLocations() menukar nilai pada kolom asal dan tujuan, tujuan perjalanan akan dibalik.
                       ),
                     ),
                   ],
@@ -140,7 +144,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
           ),
           const SizedBox(height: 16),
 
-          // DATE PICKER & SEARCH BUTTON
+          // tampilan tanggal
           Row(
             children: [
               Expanded(
@@ -153,9 +157,9 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
                       horizontal: 16,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withOpacity(0.2), //Mengatur warna latbel Container menjadi putih.
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white30),
+                      border: Border.all(color: Colors.white30), //Menambahkan border putih dengan transparansi
                     ),
                     child: Row(
                       children: [
@@ -166,7 +170,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
+                          "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}", //ambil tanggal dll yg dipilih
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -177,6 +181,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
                   ),
                 ),
               ),
+              //bagian cari
               const SizedBox(width: 12),
               Expanded(
                 flex: 1,
@@ -205,29 +210,33 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
     );
   }
 
-  Widget _buildLocationRow(
+  Widget _buildLocationRow( //icon input
     IconData icon,
     String label,
     TextEditingController controller,
   ) {
+    //parameter teks
     return Row(
       children: [
-        Icon(icon, color: Colors.grey),
+        Icon(icon, color: Colors.grey), //menunjukkan ikon  input ikon lokasi
         const SizedBox(width: 12),
         Expanded(
-          child: RawAutocomplete<String>(
+          child: RawAutocomplete<String>( //mengetik teks, aplikasi memberikan opsi yang relevan berdasarkan input
             textEditingController: controller,
-            focusNode: FocusNode(),
-            optionsBuilder: (TextEditingValue textEditingValue) {
+            focusNode: FocusNode(),//autocorrect
+
+            optionsBuilder: (TextEditingValue textEditingValue) { //membangun daftar opsi yang relevan berdasarkan teks yg dimasukan
               if (textEditingValue.text.isEmpty) {
                 return const Iterable<String>.empty();
               }
-              return _allCities.where((String option) {
-                return option.toLowerCase().contains(
+              return _allCities.where((String option) { //list daftar yg sudah difilter
+                return option.toLowerCase().contains( //pencarian tanpa kapitalisasi
                   textEditingValue.text.toLowerCase(),
                 );
               });
             },
+            //input teks
+            //menampilkan teks input di screen
             fieldViewBuilder:
                 (
                   BuildContext context,
@@ -294,13 +303,14 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
     );
   }
 
-  Widget _buildRouteCard(BuildContext context, TravelRoute route) {
+  Widget _buildRouteCard(BuildContext context, TravelRoute route) { //membangun widget kartu informasi rute
     return StreamBuilder<Map<int, String>>(
-      stream: _bookingService.getBookedSeatsWithGenderStream(route.id),
+      stream: _bookingService.getBookedSeatsWithGenderStream(route.id),//menunjukkan kursi telah dipesan,ID kursi sebagai key dan informasi jenis kelamin sebagai value.
       builder: (context, snapshot) {
         int totalCapacity = route.isWisata ? 19 : 7;
-        int availableSeats = totalCapacity;
+        int availableSeats = totalCapacity; //dihitung yg sudah dipesan
 
+      //Mengambil jumlah kursi yang sudah dipesan
         if (snapshot.hasData) {
           availableSeats = totalCapacity - snapshot.data!.length;
         }
@@ -308,21 +318,22 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
         if (availableSeats < 0) {
           availableSeats = 0;
         }
-
+        //card
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 3,
+          elevation: 3, //bayangan
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Top Row: Seats & Price
+                // Top Row: kursi & harga
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Menyusun elemen-elemen di dalam Row
                   children: [
                     Row(
                       children: [
+                        //seat icon
                         Icon(
                           Icons.event_seat,
                           size: 18,
@@ -332,7 +343,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          "$availableSeats Kursi Tersedia",
+                          "$availableSeats Kursi Tersedia", //Menampilkan jumlah kursi yang tersedia
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -343,6 +354,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
                         ),
                       ],
                     ),
+                    //harga
                     Text(
                       route.price,
                       style: const TextStyle(
@@ -355,7 +367,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
                 ),
                 const Divider(height: 30),
 
-                // Middle Row: Time & Route
+                // waktu keberangkatan dan kedatangan
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -368,27 +380,28 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
 
                 // Button
                 SizedBox(
-                  width: double.infinity,
+                  width: double.infinity, //button full
                   child: ElevatedButton(
-                    onPressed: availableSeats == 0
+                    onPressed: availableSeats == 0 // button hanya jika ada kursi yang tersedia
                         ? null
                         : () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => SeatSelectionScreen(route: route),
+                                builder: (_) => SeatSelectionScreen(route: route), //ke proses selanjutnya
                               ),
                             );
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: availableSeats == 0 
                           ? Colors.grey 
-                          : Theme.of(context).primaryColor,
+                          : Theme.of(context).primaryColor,//jika ada warna maka blm penuh
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
+                    //jika 0 penuh
                     child: Text(
                       availableSeats == 0 ? "Penuh" : "Pilih Jadwal Ini",
                       style: const TextStyle(
@@ -406,13 +419,14 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
     );
   }
 
-  Widget _buildTimeColumn(String time, String city) {
+  Widget _buildTimeColumn(String time, String city) { //menampilkan dua elemen: waktu dan kota.
     return Column(
       children: [
         Text(
           time,
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
+        //warna kota
         const SizedBox(height: 4),
         Text(city, style: const TextStyle(color: Colors.grey)),
       ],

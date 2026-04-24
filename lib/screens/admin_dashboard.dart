@@ -5,6 +5,7 @@ import 'login_screen.dart';
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
 
+  //fungsi logout
   void _logout(BuildContext context) async {
     final AuthService authService = AuthService();
     await authService.signOut();
@@ -15,7 +16,7 @@ class AdminDashboard extends StatelessWidget {
       (route) => false,
     );
   }
-
+//tampilan pada admin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,6 +34,7 @@ class AdminDashboard extends StatelessWidget {
           ),
         ],
       ),
+      //Konten utama halaman yang dalam SingleChildScrollView, memungkinkan tampilan untuk digulirkan ketika konten melebihi ruang layar.
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -48,6 +50,8 @@ class AdminDashboard extends StatelessWidget {
               style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
+
+            //GridView.count: Mengatur tampilan item dalam grid (2 kolom)
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -70,6 +74,7 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
+//Fungsi untuk membuat tampilan menu dalam bentuk kartu.
   Widget _adminMenu(IconData icon, String title, Color color) {
     return Container(
       decoration: BoxDecoration(
@@ -83,6 +88,7 @@ class AdminDashboard extends StatelessWidget {
           ),
         ],
       ),
+     //material design
       child: Material(
         color: Colors.transparent,
         child: InkWell(

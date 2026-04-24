@@ -5,7 +5,7 @@ import 'profile_screen.dart';
 
 class DriverDashboard extends StatelessWidget {
   const DriverDashboard({super.key});
-
+//logout pada driver
   void _logout(BuildContext context) async {
     final AuthService authService = AuthService();
     await authService.signOut();
@@ -16,7 +16,7 @@ class DriverDashboard extends StatelessWidget {
       (route) => false,
     );
   }
-
+  //pemindaian scan penumpang
   void _simulateScan(BuildContext context) {
     showDialog(
       context: context,
@@ -29,6 +29,7 @@ class DriverDashboard extends StatelessWidget {
             Text("Scan Berhasil"),
           ],
         ),
+        //validasi scan
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,13 +41,14 @@ class DriverDashboard extends StatelessWidget {
             Text("Status: VALID", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
           ],
         ),
+        //button tutup
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Tutup")),
         ],
       ),
     );
   }
-
+  //judul appbar
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,6 +60,7 @@ class DriverDashboard extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          //logout button
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => _logout(context),
@@ -65,6 +68,8 @@ class DriverDashboard extends StatelessWidget {
           ),
         ],
       ),
+      //header
+      //header bawah melengkung
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -76,6 +81,7 @@ class DriverDashboard extends StatelessWidget {
                 color: Colors.blue[800],
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
               ),
+              //teks sambutan driver
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -94,15 +100,15 @@ class DriverDashboard extends StatelessWidget {
             
             const SizedBox(height: 32),
 
-            // Main Menu
+            // menu utama
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+                crossAxisCount: 2,//2 grid menu
+                mainAxisSpacing: 16,//spasi 16 px hori
+                crossAxisSpacing: 16,//spasi 16 px verti
                 childAspectRatio: 1.1,
                 children: [
                   _driverMenu(Icons.qr_code_scanner, "Scan Barcode\nTiket", Colors.blue, () => _simulateScan(context)),
@@ -111,7 +117,6 @@ class DriverDashboard extends StatelessWidget {
                   _driverMenu(Icons.person, "Profile\nDriver", Colors.indigo, () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
                   }),
-                  _driverMenu(Icons.exit_to_app, "Logout /\nSesi Login", Colors.red, () => _logout(context)),
                 ],
               ),
             ),
@@ -121,7 +126,7 @@ class DriverDashboard extends StatelessWidget {
       ),
     );
   }
-
+//dasboard
   Widget _driverMenu(IconData icon, String title, Color color, VoidCallback onTap) {
     return Container(
       decoration: BoxDecoration(
@@ -131,10 +136,11 @@ class DriverDashboard extends StatelessWidget {
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
+      //kode ui dasboard
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16), //lengkung
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),

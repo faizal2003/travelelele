@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:travelelele/screens/booked_ticket_screen.dart';
+import 'booked_ticket_screen.dart';
 import 'travel_search_screen.dart';
 import '../models/trip_model.dart';
 import 'travel_list_screen.dart';
@@ -15,25 +15,27 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  int _currentIndex = 0;//menu
 
   final List<Widget> _screens = [
-    const HomeContent(),
-    const TicketBookedScreen(),
-    const ProfileScreen(),
+    const HomeContent(),//home
+    const TicketBookedScreen(),//tiket
+    const ProfileScreen(),//profile
   ];
 
+  //menampilkan tiga item yang memungkinkan pengguna beralih (home,tiket,profil)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex], // Switch screens based on index
-      bottomNavigationBar: BottomNavigationBar(
+      body: _screens[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar( //navigasi
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: const Color(0xFF154c79),
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: const Color(0xFF154c79),//bottom dipilih warna biru
+        unselectedItemColor: Colors.grey,//menu tdk dipilih berwarna abu
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),//icon home
           BottomNavigationBarItem(
             icon: Icon(Icons.confirmation_number),
             label: "Tickets",
@@ -52,21 +54,19 @@ class HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("SVARGADWIPA"),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications)),
-        ],
+        title: const Text("SVARGADWIPA"),//judul layar svargadwipa
       ),
+      //card pencarian
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeroSection(),
-            Padding(
+            Padding( //jarak
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  Expanded(
+                  Expanded( //memastikan katergori card lebarnya sama
                     child: _buildCategoryCard(
                       context,
                       "Cari Travel",
@@ -87,20 +87,21 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: 16.0),//padding kanan kiri 16
               child: Text(
                 "Promo Special",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
+            //menampilkan daftar perjalanan promo dalam bentuk kartu secara horizontal
             const SizedBox(height: 10),
             SizedBox(
               height: 180,
               child: ListView.builder(
-                scrollDirection: Axis.horizontal,
+                scrollDirection: Axis.horizontal,//digesar kanan-kiri
                 padding: const EdgeInsets.only(left: 16),
                 itemCount: trips.length,
-                itemBuilder: (context, index) =>
+                itemBuilder: (context, index) =>//yang akan ditampilkan
                     _buildPromoCard(context, trips[index]),
               ),
             ),
@@ -110,38 +111,40 @@ class HomeContent extends StatelessWidget {
     );
   }
 
+  //untuk gambar slider bagian atas
   Widget _buildHeroSection() {
-    // Take only the first 3 trips for the carousel
     final List<Trip> featuredTrips = trips.take(3).toList();
-
-    return CarouselSlider(
+  //hanya mengambil 3 perjalanan
+    return CarouselSlider(//slide secara otomatis
       options: CarouselOptions(
         height: 200.0,
         autoPlay: true,
-        enlargeCenterPage: false,
+        enlargeCenterPage: false,//gambar akan sama semua
         viewportFraction: 1.0, // Full width
-        autoPlayInterval: const Duration(seconds: 5),
+        autoPlayInterval: const Duration(seconds: 5),//otomatis slide waktu 5 detik
       ),
+
       items: featuredTrips.map((trip) {
         return Builder(
           builder: (BuildContext context) {
-            return GestureDetector(
-              // Allow clicking the hero image to go to details
-              onTap: () => Navigator.push(
+            return GestureDetector( //deteksi gestur pengguna
+              onTap: () => Navigator.push( //navigasi layar ketika diketuk
                 context,
                 MaterialPageRoute(builder: (_) => DetailScreen(trip: trip)),
+                //navigasi ke DetailScreen
               ),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   // 1. The Image
                   Image.network(
-                    trip.image,
+                    trip.image, //menampilkan gambar yang diambil dari URL yang disediakan dalam trip image
                     fit: BoxFit.cover,
                     width: double.infinity,
                   ),
 
                   // 2. Dark Overlay Gradient (for readable text)
+                  //menambahkan gradien gelap di atas gambar, memastikan teks yang diletakkan di atasnya lebih terbaca.
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -156,6 +159,7 @@ class HomeContent extends StatelessWidget {
                   ),
 
                   // 3. Text Content
+                  // tulisan dalam gambar (featured).
                   Positioned(
                     bottom: 20,
                     left: 20,
@@ -164,11 +168,11 @@ class HomeContent extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(//jarak teks
                             horizontal: 8,
                             vertical: 4,
                           ),
-                          decoration: BoxDecoration(
+                          decoration: BoxDecoration(//warna
                             color: Colors.orange,
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -181,9 +185,9 @@ class HomeContent extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 8),//untuk memberi jarak vertikal antara widget.
                         Text(
-                          trip.title,
+                          trip.title,//judul perjalanan.
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -210,10 +214,10 @@ class HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCard(
+  Widget _buildCategoryCard( //fungsi yang digunakan untuk membuat kartu kategori
     BuildContext context,
-    String title,
-    IconData icon,
+    String title, //Judul kategori yang ditampilkan di kartu
+    IconData icon,//Ikon yang digunakan untuk mewakili kategori
     Color color,
   ) {
     return InkWell(
@@ -231,7 +235,7 @@ class HomeContent extends StatelessWidget {
           );
         }
       },
-      child: Container(
+      child: Container(//icon
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -244,7 +248,7 @@ class HomeContent extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
+        child: Column(//tampilan lingkaran icon
           children: [
             CircleAvatar(
               backgroundColor: color.withOpacity(0.2),
@@ -259,12 +263,13 @@ class HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPromoCard(BuildContext context, Trip trip) {
-    return GestureDetector(
+  Widget _buildPromoCard(BuildContext context, Trip trip) { //menampilkan detail perjalanan dari promo yang dapat diketuk
+    return GestureDetector( //gesture ketukan
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => DetailScreen(trip: trip)),
       ),
+      //kontainer detail perjalanan
       child: Container(
         width: 160,
         margin: const EdgeInsets.only(right: 16),
@@ -286,6 +291,8 @@ class HomeContent extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
+
+            //menampilkan judul perjalanan dan harga perjalanan dengan tata letak yang terstruktur (sdh dipencet)
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(

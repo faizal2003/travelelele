@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
-class TicketDetailScreen extends StatelessWidget {
+class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
   final Map<String, dynamic> ticketData;
   final String ticketId;
 
-  const TicketDetailScreen({
+  //menerima parameter (ticketData dan ticketId) memberikan informasi tiket yang dipilih
+  const TicketDetailScreen({ //konstruktor untuk kirim data
     Key? key,
     required this.ticketData,
     required this.ticketId,
   }) : super(key: key);
 
+  //mengambil informasi terkait tiket dari ticketData, memastikan bahwa jika ada data yang tidak ada (null),diberikan nilai default
   @override
   Widget build(BuildContext context) {
     final fromCity = ticketData['fromCity'] ?? 'Unknown';
@@ -22,6 +24,7 @@ class TicketDetailScreen extends StatelessWidget {
     final passengers = List<Map<String, dynamic>>.from(ticketData['passengers'] ?? []);
     final totalPrice = ticketData['totalPrice']?.toString() ?? '0';
 
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -33,23 +36,24 @@ class TicketDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildTicketHeader(fromCity, toCity, status, isWisata),
+            _buildTicketHeader(fromCity, toCity, status, isWisata), //menampilkan header tiket, mencakup informasi
             const SizedBox(height: 24),
-            _buildTripInfo(departTime, arriveTime, seats),
+            _buildTripInfo(departTime, arriveTime, seats), //menampilkan informasi perjalanan
             const SizedBox(height: 24),
-            _buildPassengerList(passengers),
+            _buildPassengerList(passengers), //menampilkan daftar penumpang
             const SizedBox(height: 24),
-            _buildPaymentInfo(totalPrice),
+            _buildPaymentInfo(totalPrice), //menampilkan informasi pembayaran
           ],
         ),
       ),
     );
   }
 
+  //menampilkan informasi tiket. menerima empat parameter:
   Widget _buildTicketHeader(String from, String to, String status, bool isWisata) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+      decoration: BoxDecoration( //ui container
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -62,7 +66,7 @@ class TicketDetailScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(
+          Row( //menampilkan dua elemen secara berdampingan
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
@@ -87,6 +91,7 @@ class TicketDetailScreen extends StatelessWidget {
             ticketId,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
+          // jika mengenai paket wisata detail akan ditampilkan
           const Divider(height: 32),
           if (isWisata)
             Column(
@@ -103,6 +108,7 @@ class TicketDetailScreen extends StatelessWidget {
                 ),
               ],
             )
+            //informasi keberangkatan & tujuan
           else
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -116,7 +122,7 @@ class TicketDetailScreen extends StatelessWidget {
       ),
     );
   }
-
+  //ui nama kota & tujuan
   Widget _buildCityColumn(String city, String label) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -133,7 +139,7 @@ class TicketDetailScreen extends StatelessWidget {
       ],
     );
   }
-
+  //tampilan informasi perjalanan tiket dalam sebuah Container
   Widget _buildTripInfo(String departTime, String arriveTime, List<int> seats) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -148,6 +154,7 @@ class TicketDetailScreen extends StatelessWidget {
           ),
         ],
       ),
+      //icon label
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -159,6 +166,7 @@ class TicketDetailScreen extends StatelessWidget {
     );
   }
 
+  //
   Widget _buildInfoItem(IconData icon, String label, String value) {
     return Column(
       children: [
@@ -176,7 +184,7 @@ class TicketDetailScreen extends StatelessWidget {
       ],
     );
   }
-
+  //container daftar penumpang
   Widget _buildPassengerList(List<Map<String, dynamic>> passengers) {
     return Container(
       decoration: BoxDecoration(
@@ -190,6 +198,7 @@ class TicketDetailScreen extends StatelessWidget {
           ),
         ],
       ),
+      // daftar penumpang
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -200,9 +209,10 @@ class TicketDetailScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
+          //
           const Divider(height: 1),
-          ListView.separated(
-            shrinkWrap: true,
+          ListView.separated( //menampilkan elemen-elemen dalam daftar dengan pemisah di antara setiap item.
+            shrinkWrap: true,//menampilkan item-item, tanpa memperluas seluruh layar.
             physics: const NeverScrollableScrollPhysics(),
             itemCount: passengers.length,
             separatorBuilder: (context, index) => const Divider(height: 1),
@@ -212,6 +222,7 @@ class TicketDetailScreen extends StatelessWidget {
               final name = passenger['name'] ?? 'Unknown';
               final phone = passenger['phone'] ?? '-';
 
+              //memberikan elemen visual yang menarik nomor kursi,menampilkan nama,nomor telepon
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Colors.blue[50],
@@ -223,7 +234,7 @@ class TicketDetailScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),//nama bold
                 subtitle: Text(phone),
               );
             },
@@ -232,7 +243,7 @@ class TicketDetailScreen extends StatelessWidget {
       ),
     );
   }
-
+  //total pembayaran
   Widget _buildPaymentInfo(String totalPrice) {
     return Container(
       padding: const EdgeInsets.all(20),
