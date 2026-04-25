@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/route_model.dart';
 import '../services/booking_service.dart';
+import '../services/route_service.dart';
 import 'seat_selection_screen.dart'; // We reuse your existing seat selection
 
 class TravelSearchScreen extends StatefulWidget {
@@ -12,50 +13,55 @@ class TravelSearchScreen extends StatefulWidget {
 
 //yang bertanggung jawab menangani logika
 class _TravelSearchScreenState extends State<TravelSearchScreen> {
-  final TextEditingController _fromController = TextEditingController(
-    text: "Yogyakarta",
-  );
-  final TextEditingController _toController = TextEditingController(
-    text: "Madiun",
-  );
+  String _fromCity = "Yogyakarta";
+  String _toCity = "Madiun";
+  final List<String> _cities = ['Madiun', 'Surabaya', 'Yogyakarta', 'Malang'];
+
   //tanggal default
   DateTime _selectedDate = DateTime.now();
   final BookingService _bookingService = BookingService();
+  final RouteService _routeService = RouteService();
 
   // menampilkan rute berdasarkan input pengguna
-  List<TravelRoute> _displayRoutes = dummyRoutes;
-
-  //menyimpan hasil pencarian, data dummy.
-  final Set<String> _allCities = {};
+  List<TravelRoute> _allRoutes = [];
+  List<TravelRoute> _displayRoutes = [];
 
   @override
   void initState() { //posisi default,menampilkan semua jadwal
     super.initState();
-    // mengekstrak kota dari dummyroutes
-    for (var route in dummyRoutes) {
-      _allCities.add(route.fromCity);
-      _allCities.add(route.toCity);
-    }
+    _loadRoutes();
   }
+
+  void _loadRoutes() {
+    _routeService.getRoutes().listen((routes) {
+      if (mounted) {
+        setState(() {
+          _allRoutes = routes;
+          _searchRoutes();
+        });
+      }
+    });
+  }
+
   //mencari dan memfilter daftar rute perjalanan sesuai yg di input
   void _searchRoutes() {
+    final String searchDate = "${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}";
     setState(() { //fungsi memperbarui state
-      _displayRoutes = dummyRoutes.where((route) { //mencari sesuai inputan
-        return route.fromCity.toLowerCase().contains( //menampilkan teks yang dimasukkan pengguna.
-              _fromController.text.toLowerCase(),
-            ) &&
-            route.toCity.toLowerCase().contains(
-              _toController.text.toLowerCase(),
-            );
+      _displayRoutes = _allRoutes.where((route) { //mencari sesuai inputan
+        return route.fromCity.toLowerCase() == _fromCity.toLowerCase() &&
+               route.toCity.toLowerCase() == _toCity.toLowerCase() &&
+               route.date == searchDate;
       }).toList();
     });
   }
 
   void _swapLocations() { //tukar nilai yang ada di asal ke tujuan
-    String temp = _fromController.text;
-    _fromController.text = _toController.text;
-    _toController.text = temp;
-    _searchRoutes();
+    setState(() {
+      String temp = _fromCity;
+      _fromCity = _toCity;
+      _toCity = temp;
+      _searchRoutes();
+    });
   }
 
   Future<void> _pickDate() async { //memilih tanggal
@@ -63,10 +69,13 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),//tgl awal
-      lastDate: DateTime(2025),//Menentukan tanggal akhir yang dapat dipilih.
+      lastDate: DateTime(2030),//Menentukan tanggal akhir yang dapat dipilih.
     );
-    if (picked != null && picked != _selectedDate) {
-      setState(() => _selectedDate = picked);
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        _searchRoutes();
+      });
     }
   }
 
@@ -119,12 +128,16 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
 
             child: Column( //menampilkan widget secara vertikal.
               children: [
-                _buildLocationRow(Icons.my_location, "Dari", _fromController), //menampilkan input asal atau tujuan.
+                _buildLocationRow(Icons.my_location, "Dari", _fromCity, (val) {
+                  setState(() => _fromCity = val!);
+                }), //menampilkan input asal atau tujuan.
                 const Divider(height: 1, indent: 40),
                 Stack(
                   alignment: Alignment.centerRight,
                   children: [
-                    _buildLocationRow(Icons.location_on, "Ke", _toController), //mengontrol input teks pada kolom tujuan perjalanan
+                    _buildLocationRow(Icons.location_on, "Ke", _toCity, (val) {
+                      setState(() => _toCity = val!);
+                    }), //mengontrol input teks pada kolom tujuan perjalanan
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: IconButton(
@@ -213,7 +226,8 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
   Widget _buildLocationRow( //icon input
     IconData icon,
     String label,
-    TextEditingController controller,
+    String value,
+    void Function(String?) onChanged,
   ) {
     //parameter teks
     return Row(
@@ -221,82 +235,21 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
         Icon(icon, color: Colors.grey), //menunjukkan ikon  input ikon lokasi
         const SizedBox(width: 12),
         Expanded(
-          child: RawAutocomplete<String>( //mengetik teks, aplikasi memberikan opsi yang relevan berdasarkan input
-            textEditingController: controller,
-            focusNode: FocusNode(),//autocorrect
-
-            optionsBuilder: (TextEditingValue textEditingValue) { //membangun daftar opsi yang relevan berdasarkan teks yg dimasukan
-              if (textEditingValue.text.isEmpty) {
-                return const Iterable<String>.empty();
-              }
-              return _allCities.where((String option) { //list daftar yg sudah difilter
-                return option.toLowerCase().contains( //pencarian tanpa kapitalisasi
-                  textEditingValue.text.toLowerCase(),
-                );
-              });
-            },
-            //input teks
-            //menampilkan teks input di screen
-            fieldViewBuilder:
-                (
-                  BuildContext context,
-                  TextEditingController textEditingController,
-                  FocusNode focusNode,
-                  VoidCallback onFieldSubmitted,
-                ) {
-                  return TextField(
-                    controller: textEditingController,
-                    focusNode: focusNode,
-                    decoration: InputDecoration(
-                      labelText: label,
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    onSubmitted: (String value) {
-                      onFieldSubmitted();
-                    },
-                  );
-                },
-            optionsViewBuilder:
-                (
-                  BuildContext context,
-                  AutocompleteOnSelected<String> onSelected,
-                  Iterable<String> options,
-                ) {
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      elevation: 4.0,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 250, // Adjust width as needed
-                        constraints: const BoxConstraints(maxHeight: 200),
-                        child: ListView.builder(
-                          padding: EdgeInsets.zero,
-                          shrinkWrap: true,
-                          itemCount: options.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final String option = options.elementAt(index);
-                            return InkWell(
-                              onTap: () {
-                                onSelected(option);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Text(option),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
+          child: DropdownButtonFormField<String>(
+            value: value,
+            items: _cities.map((city) => DropdownMenuItem(value: city, child: Text(city))).toList(),
+            onChanged: onChanged,
+            decoration: InputDecoration(
+              labelText: label,
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.black,
+            ),
           ),
         ),
       ],
@@ -307,7 +260,7 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
     return StreamBuilder<Map<int, String>>(
       stream: _bookingService.getBookedSeatsWithGenderStream(route.id),//menunjukkan kursi telah dipesan,ID kursi sebagai key dan informasi jenis kelamin sebagai value.
       builder: (context, snapshot) {
-        int totalCapacity = route.isWisata ? 19 : 7;
+        int totalCapacity = route.seatsAvailable;
         int availableSeats = totalCapacity; //dihitung yg sudah dipesan
 
       //Mengambil jumlah kursi yang sudah dipesan

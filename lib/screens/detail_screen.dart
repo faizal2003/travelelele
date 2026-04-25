@@ -60,14 +60,16 @@ class DetailScreen extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         // detail rute perjalanan
+                        final now = DateTime.now();
                         final route = TravelRoute(
                           id: 'trip-${trip.title.hashCode}',
-                          fromCity: 'Jakarta', // Default
+                          fromCity: 'Yogyakarta', // Changed from Jakarta
                           toCity: trip.title,
+                          date: "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}",
                           departTime: '08:00',
                           arriveTime: '18:00',
                           price: trip.price, //harga
-                          seatsAvailable: 19,
+                          seatsAvailable: 7,
                           isWisata: true,
                         );
 

@@ -20,6 +20,7 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
     final isWisata = ticketData['isWisata'] ?? false;
     final departTime = ticketData['departTime'] ?? '--:--';
     final arriveTime = ticketData['arriveTime'] ?? '--:--';
+    final date = ticketData['date'] ?? 'Unknown Date';
     final status = ticketData['status'] ?? 'Unknown';
     final seats = List<int>.from(ticketData['seats'] ?? []);
     final passengers = List<Map<String, dynamic>>.from(ticketData['passengers'] ?? []);
@@ -39,7 +40,7 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
           children: [
             _buildTicketHeader(fromCity, toCity, status, isWisata), //menampilkan header tiket, mencakup informasi
             const SizedBox(height: 24),
-            _buildTripInfo(departTime, arriveTime, seats), //menampilkan informasi perjalanan
+            _buildTripInfo(date, departTime, arriveTime, seats), //menampilkan informasi perjalanan
             const SizedBox(height: 24),
             _buildQrSection(ticketId),
             const SizedBox(height: 24),
@@ -143,7 +144,7 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
     );
   }
   //tampilan informasi perjalanan tiket dalam sebuah Container
-  Widget _buildTripInfo(String departTime, String arriveTime, List<int> seats) {
+  Widget _buildTripInfo(String date, String departTime, String arriveTime, List<int> seats) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -158,12 +159,23 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
         ],
       ),
       //icon label
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _buildInfoItem(Icons.schedule, 'Berangkat', departTime),
-          _buildInfoItem(Icons.event_seat, 'Kursi', seats.join(', ')),
-          _buildInfoItem(Icons.schedule, 'Tiba', arriveTime),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildInfoItem(Icons.calendar_today, 'Tanggal', date),
+              _buildInfoItem(Icons.event_seat, 'Kursi', seats.join(', ')),
+            ],
+          ),
+          const Divider(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildInfoItem(Icons.schedule, 'Berangkat', departTime),
+              _buildInfoItem(Icons.schedule, 'Tiba', arriveTime),
+            ],
+          ),
         ],
       ),
     );

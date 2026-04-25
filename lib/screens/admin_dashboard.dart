@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'destination_management_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -60,12 +61,19 @@ class AdminDashboard extends StatelessWidget {
               crossAxisSpacing: 16,
               childAspectRatio: 1.1,
               children: [
-                _adminMenu(Icons.map, "Kelola\nDestinasi", Colors.orange),
-                _adminMenu(Icons.directions_bus, "Kelola\nArmada", Colors.blue),
-                _adminMenu(Icons.attach_money, "Kelola\nHarga", Colors.green),
-                _adminMenu(Icons.bar_chart, "Laporan\nKeuangan", Colors.purple),
-                _adminMenu(Icons.people, "Kelola\nPengguna", Colors.red),
-                _adminMenu(Icons.settings, "Pengaturan\nSistem", Colors.grey),
+                _adminMenu(Icons.map, "Kelola\nDestinasi", Colors.orange, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DestinationManagementScreen(),
+                    ),
+                  );
+                }),
+                _adminMenu(Icons.directions_bus, "Kelola\nArmada", Colors.blue, () {}),
+                _adminMenu(Icons.attach_money, "Kelola\nHarga", Colors.green, () {}),
+                _adminMenu(Icons.bar_chart, "Laporan\nKeuangan", Colors.purple, () {}),
+                _adminMenu(Icons.people, "Kelola\nPengguna", Colors.red, () {}),
+                _adminMenu(Icons.settings, "Pengaturan\nSistem", Colors.grey, () {}),
               ],
             ),
           ],
@@ -75,7 +83,7 @@ class AdminDashboard extends StatelessWidget {
   }
 
 //Fungsi untuk membuat tampilan menu dalam bentuk kartu.
-  Widget _adminMenu(IconData icon, String title, Color color) {
+  Widget _adminMenu(IconData icon, String title, Color color, VoidCallback onTap) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -93,7 +101,7 @@ class AdminDashboard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {},
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(

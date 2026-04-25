@@ -60,6 +60,7 @@ class BookingService {
       'routeId': route.id,
       'fromCity': route.fromCity,
       'toCity': route.toCity,
+      'date': route.date,
       'departTime': route.departTime,
       'arriveTime': route.arriveTime,
       'isWisata': route.isWisata,

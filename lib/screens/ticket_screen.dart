@@ -58,6 +58,7 @@ class TicketScreen extends StatelessWidget {
                     "Rute",
                     "${route.fromCity} - ${route.toCity}",
                   ),
+                  _buildTicketRow("Tanggal", route.date),
                   _buildTicketRow(
                     "Jadwal",
                     "${route.departTime} - ${route.arriveTime}",

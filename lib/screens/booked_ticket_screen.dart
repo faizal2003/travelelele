@@ -86,6 +86,7 @@ class TicketBookedScreen extends StatelessWidget {
         final fromCity = data['fromCity'] ?? 'Unknown';
         final toCity = data['toCity'] ?? 'Unknown';
         final isWisata = data['isWisata'] ?? false;
+        final date = data['date'] ?? 'Unknown Date';
         final departTime = data['departTime'] ?? '--:--';
         final arriveTime = data['arriveTime'] ?? '--:--';
         final status = data['status'] ?? 'Unknown';
@@ -149,11 +150,13 @@ class TicketBookedScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      _buildInfoColumn('Date', date),
                       _buildInfoColumn('Depart', departTime),//waktu keberangkatan
                       _buildInfoColumn('Arrive', arriveTime),//waktu sampai
-                      _buildInfoColumn('Seats', seats.join(', ')),//daftar kursi yang dipilih
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  _buildInfoColumn('Seats', seats.join(', ')),//daftar kursi yang dipilih
                 ],
               ),
             ),
