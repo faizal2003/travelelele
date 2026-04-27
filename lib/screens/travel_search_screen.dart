@@ -45,12 +45,28 @@ class _TravelSearchScreenState extends State<TravelSearchScreen> {
 
   //mencari dan memfilter daftar rute perjalanan sesuai yg di input
   void _searchRoutes() {
+    final now = DateTime.now();
     final String searchDate = "${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}";
+    
     setState(() { //fungsi memperbarui state
       _displayRoutes = _allRoutes.where((route) { //mencari sesuai inputan
-        return route.fromCity.toLowerCase() == _fromCity.toLowerCase() &&
-               route.toCity.toLowerCase() == _toCity.toLowerCase() &&
-               route.date == searchDate;
+        if (route.fromCity.toLowerCase() != _fromCity.toLowerCase() ||
+            route.toCity.toLowerCase() != _toCity.toLowerCase() ||
+            route.date != searchDate) {
+          return false;
+        }
+
+        // Check if arrival time has passed for today
+        try {
+          final arrivalDateTime = DateTime.parse("${route.date} ${route.arriveTime}:00");
+          if (arrivalDateTime.isBefore(now)) {
+            return false;
+          }
+        } catch (e) {
+          // If parsing fails, allow the route (safety fallback)
+        }
+
+        return true;
       }).toList();
     });
   }

@@ -114,15 +114,6 @@ class _DestinationManagementScreenState extends State<DestinationManagementScree
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
-                DropdownButtonFormField<bool>(
-                  value: isWisata,
-                  decoration: const InputDecoration(labelText: "Tipe Paket"),
-                  items: const [
-                    DropdownMenuItem(value: false, child: Text("Travel (19 Kursi)")),
-                    DropdownMenuItem(value: true, child: Text("Wisata (7 Kursi)")),
-                  ],
-                  onChanged: (val) => setDialogState(() => isWisata = val!),
-                ),
               ],
             ),
           ),
@@ -144,8 +135,8 @@ class _DestinationManagementScreenState extends State<DestinationManagementScree
                   departTime: departController.text,
                   arriveTime: arriveController.text,
                   price: _formatRupiah(priceController.text),
-                  seatsAvailable: isWisata ? 7 : 19,
-                  isWisata: isWisata,
+                  seatsAvailable: 19, // Always 19 for Travel
+                  isWisata: false, // Always Travel
                 );
 
                 if (route == null) {
@@ -167,7 +158,7 @@ class _DestinationManagementScreenState extends State<DestinationManagementScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Kelola Destinasi"),
+        title: const Text("Kelola Travel"),
         backgroundColor: Colors.red[700],
         foregroundColor: Colors.white,
       ),
@@ -194,7 +185,7 @@ class _DestinationManagementScreenState extends State<DestinationManagementScree
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   title: Text("${route.fromCity} → ${route.toCity}"),
-                  subtitle: Text("${route.date} | ${route.departTime} - ${route.arriveTime}\n${route.price} | Kursi: ${route.seatsAvailable} | ${route.isWisata ? 'Wisata' : 'Travel'}"),
+                  subtitle: Text("${route.date} | ${route.departTime} - ${route.arriveTime}\n${route.price} | Kursi: ${route.seatsAvailable} | Travel"),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'destination_management_screen.dart';
+import 'wisata_management_screen.dart';
+import 'promo_management_screen.dart';
+import 'user_management_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -37,46 +40,69 @@ class AdminDashboard extends StatelessWidget {
       ),
       //Konten utama halaman yang dalam SingleChildScrollView, memungkinkan tampilan untuk digulirkan ketika konten melebihi ruang layar.
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Selamat Datang, Admin",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Kelola operasional travel dan wisata Anda di sini.",
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 32),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Selamat Datang, Admin",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Kelola operasional travel dan wisata Anda di sini.",
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 32),
 
-            //GridView.count: Mengatur tampilan item dalam grid (2 kolom)
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 1.1,
-              children: [
-                _adminMenu(Icons.map, "Kelola\nDestinasi", Colors.orange, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DestinationManagementScreen(),
-                    ),
-                  );
-                }),
-                _adminMenu(Icons.directions_bus, "Kelola\nArmada", Colors.blue, () {}),
-                _adminMenu(Icons.attach_money, "Kelola\nHarga", Colors.green, () {}),
-                _adminMenu(Icons.bar_chart, "Laporan\nKeuangan", Colors.purple, () {}),
-                _adminMenu(Icons.people, "Kelola\nPengguna", Colors.red, () {}),
-                _adminMenu(Icons.settings, "Pengaturan\nSistem", Colors.grey, () {}),
-              ],
-            ),
-          ],
+              //GridView.count: Mengatur tampilan item dalam grid (2 kolom)
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1.1,
+                children: [
+                  _adminMenu(Icons.map, "Kelola\nTravel", Colors.orange, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DestinationManagementScreen(),
+                      ),
+                    );
+                  }),
+                  _adminMenu(Icons.landscape, "Kelola\nWisata", Colors.blue, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const WisataManagementScreen(),
+                      ),
+                    );
+                  }),
+                  _adminMenu(Icons.campaign, "Kelola\nPromo", Colors.green, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PromoManagementScreen(),
+                      ),
+                    );
+                  }),
+                  _adminMenu(Icons.bar_chart, "Laporan\nKeuangan", Colors.purple, () {}),
+                  _adminMenu(Icons.people, "Kelola\nPengguna", Colors.red, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const UserManagementScreen(),
+                      ),
+                    );
+                  }),
+                  _adminMenu(Icons.settings, "Pengaturan\nSistem", Colors.grey, () {}),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

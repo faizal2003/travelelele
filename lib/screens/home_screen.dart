@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'booked_ticket_screen.dart';
 import 'travel_search_screen.dart';
 import '../models/trip_model.dart';
+import '../models/promo_model.dart';
+import '../services/trip_service.dart';
+import '../services/promo_service.dart';
 import 'travel_list_screen.dart';
 import 'detail_screen.dart';
 import 'profile_screen.dart';
@@ -15,27 +18,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;//menu
+  int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeContent(),//home
-    const TicketBookedScreen(),//tiket
-    const ProfileScreen(),//profile
+    const HomeContent(),
+    const TicketBookedScreen(),
+    const ProfileScreen(),
   ];
 
-  //menampilkan tiga item yang memungkinkan pengguna beralih (home,tiket,profil)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar( //navigasi
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: const Color(0xFF154c79),//bottom dipilih warna biru
-        unselectedItemColor: Colors.grey,//menu tdk dipilih berwarna abu
+        selectedItemColor: const Color(0xFF154c79),
+        unselectedItemColor: Colors.grey,
         items: const [
-
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),//icon home
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(
             icon: Icon(Icons.confirmation_number),
             label: "Tickets",
@@ -52,21 +53,38 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final TripService tripService = TripService();
+    final PromoService promoService = PromoService();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("SVARGADWIPA"),//judul layar svargadwipa
+        title: const Text("SVARGADWIPA"),
       ),
-      //card pencarian
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeroSection(),
-            Padding( //jarak
+            // Hero Section (Featured Wisata)
+            StreamBuilder<List<Trip>>(
+              stream: tripService.getFeaturedTrips(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+                }
+                final featured = snapshot.data ?? [];
+                if (featured.isEmpty) {
+                  return const SizedBox(height: 200, child: Center(child: Text("Belum ada konten unggulan")));
+                }
+                return _buildHeroSection(featured);
+              },
+            ),
+            
+            // Categories
+            Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  Expanded( //memastikan katergori card lebarnya sama
+                  Expanded(
                     child: _buildCategoryCard(
                       context,
                       "Cari Travel",
@@ -86,65 +104,70 @@ class HomeContent extends StatelessWidget {
                 ],
               ),
             ),
+            
+            // Promo Section
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),//padding kanan kiri 16
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 "Promo Special",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-            //menampilkan daftar perjalanan promo dalam bentuk kartu secara horizontal
             const SizedBox(height: 10),
             SizedBox(
               height: 180,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,//digesar kanan-kiri
-                padding: const EdgeInsets.only(left: 16),
-                itemCount: trips.length,
-                itemBuilder: (context, index) =>//yang akan ditampilkan
-                    _buildPromoCard(context, trips[index]),
+              child: StreamBuilder<List<Promo>>(
+                stream: promoService.getPromos(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final promos = snapshot.data ?? [];
+                  if (promos.isEmpty) {
+                    return const Center(child: Text("Belum ada promo."));
+                  }
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(left: 16),
+                    itemCount: promos.length,
+                    itemBuilder: (context, index) => _buildPromoCard(context, promos[index]),
+                  );
+                },
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  //untuk gambar slider bagian atas
-  Widget _buildHeroSection() {
-    final List<Trip> featuredTrips = trips.take(3).toList();
-  //hanya mengambil 3 perjalanan
-    return CarouselSlider(//slide secara otomatis
+  Widget _buildHeroSection(List<Trip> featuredTrips) {
+    return CarouselSlider(
       options: CarouselOptions(
         height: 200.0,
         autoPlay: true,
-        enlargeCenterPage: false,//gambar akan sama semua
-        viewportFraction: 1.0, // Full width
-        autoPlayInterval: const Duration(seconds: 5),//otomatis slide waktu 5 detik
+        enlargeCenterPage: false,
+        viewportFraction: 1.0,
+        autoPlayInterval: const Duration(seconds: 5),
       ),
-
       items: featuredTrips.map((trip) {
         return Builder(
           builder: (BuildContext context) {
-            return GestureDetector( //deteksi gestur pengguna
-              onTap: () => Navigator.push( //navigasi layar ketika diketuk
+            return GestureDetector(
+              onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => DetailScreen(trip: trip)),
-                //navigasi ke DetailScreen
               ),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // 1. The Image
                   Image.network(
-                    trip.image, //menampilkan gambar yang diambil dari URL yang disediakan dalam trip image
+                    trip.image,
                     fit: BoxFit.cover,
                     width: double.infinity,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
                   ),
-
-                  // 2. Dark Overlay Gradient (for readable text)
-                  //menambahkan gradien gelap di atas gambar, memastikan teks yang diletakkan di atasnya lebih terbaca.
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -157,9 +180,6 @@ class HomeContent extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  // 3. Text Content
-                  // tulisan dalam gambar (featured).
                   Positioned(
                     bottom: 20,
                     left: 20,
@@ -168,39 +188,24 @@ class HomeContent extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(//jarak teks
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(//warna
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
                             color: Colors.orange,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
                             "Featured",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                         ),
-                        const SizedBox(height: 8),//untuk memberi jarak vertikal antara widget.
+                        const SizedBox(height: 8),
                         Text(
-                          trip.title,//judul perjalanan.
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          trip.title,
+                          style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                         ),
                         Text(
                           trip.price,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -214,14 +219,8 @@ class HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCard( //fungsi yang digunakan untuk membuat kartu kategori
-    BuildContext context,
-    String title, //Judul kategori yang ditampilkan di kartu
-    IconData icon,//Ikon yang digunakan untuk mewakili kategori
-    Color color,
-  ) {
+  Widget _buildCategoryCard(BuildContext context, String title, IconData icon, Color color) {
     return InkWell(
-      // NEW
       onTap: () {
         if (title == "Cari Travel") {
           Navigator.push(
@@ -235,20 +234,16 @@ class HomeContent extends StatelessWidget {
           );
         }
       },
-      child: Container(//icon
+      child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
-            const BoxShadow(
-              color: Colors.black12,
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
+            const BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
           ],
         ),
-        child: Column(//tampilan lingkaran icon
+        child: Column(
           children: [
             CircleAvatar(
               backgroundColor: color.withOpacity(0.2),
@@ -263,58 +258,49 @@ class HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPromoCard(BuildContext context, Trip trip) { //menampilkan detail perjalanan dari promo yang dapat diketuk
-    return GestureDetector( //gesture ketukan
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => DetailScreen(trip: trip)),
+  Widget _buildPromoCard(BuildContext context, Promo promo) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [const BoxShadow(color: Colors.black12, blurRadius: 4)],
       ),
-      //kontainer detail perjalanan
-      child: Container(
-        width: 160,
-        margin: const EdgeInsets.only(right: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: Image.network(
-                trip.image,
-                height: 100,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Image.network(
+              promo.image,
+              height: 100,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
             ),
-
-            //menampilkan judul perjalanan dan harga perjalanan dengan tata letak yang terstruktur (sdh dipencet)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    trip.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                  ),
-                  Text(
-                    trip.price,
-                    style: const TextStyle(
-                      color: Colors.orange,
-                      fontWeight: FontWeight.bold,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Text(promo.title, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)),
+                      child: Text(promo.discount, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+                Text(promo.description, style: const TextStyle(color: Colors.grey, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

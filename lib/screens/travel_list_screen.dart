@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/trip_model.dart';
+import '../services/trip_service.dart';
 import 'detail_screen.dart';
 
 class TravelListScreen extends StatelessWidget {
@@ -8,61 +9,75 @@ class TravelListScreen extends StatelessWidget {
 //travel
   @override
   Widget build(BuildContext context) {
+    final TripService tripService = TripService();
+
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200.0,
-            floating: false,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                "Paket Wisata",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  shadows: [Shadow(blurRadius: 10, color: Colors.black)],
-                ),
-              ),
-              //mengatur gambar latar belakang di halaman dengan Image.mengambil gambar dari URL
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-                    fit: BoxFit.cover,
-                  ),
-                  //gradasi gambar
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.7),
-                        ],
-                      ),
+      body: StreamBuilder<List<Trip>>(
+        stream: tripService.getTrips(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final tripsList = snapshot.data ?? [];
+          
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 200.0,
+                floating: false,
+                pinned: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: const Text(
+                    "Paket Wisata",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      shadows: [Shadow(blurRadius: 10, color: Colors.black)],
                     ),
                   ),
-                ],
+                  //mengatur gambar latar belakang di halaman dengan Image.mengambil gambar dari URL
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+                        fit: BoxFit.cover,
+                      ),
+                      //gradasi gambar
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-          //padding
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final trip = trips[index];
-                  return _buildTripCard(context, trip);
-                },
-                childCount: trips.length,
+              //padding
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: tripsList.isEmpty 
+                  ? const SliverFillRemaining(child: Center(child: Text("Belum ada paket wisata tersedia.")))
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final trip = tripsList[index];
+                          return _buildTripCard(context, trip);
+                        },
+                        childCount: tripsList.length,
+                      ),
+                    ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        }
       ),
     );
   }
@@ -104,12 +119,6 @@ class TravelListScreen extends StatelessWidget {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 16),
-                          Text(" ${trip.rating}")
-                        ],
                       ),
                     ],
                   ),

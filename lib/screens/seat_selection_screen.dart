@@ -13,18 +13,17 @@ class SeatSelectionScreen extends StatefulWidget {
   State<SeatSelectionScreen> createState() => _SeatSelectionScreenState();
 }
 
-class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi berubah
+class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   final BookingService _bookingService = BookingService();
-  final Set<int> _selectedSeats = {}; // menyimpan kursi yang dipilih
-  String _userGender = 'Laki-laki'; //informasi jenis kelamin
+  final Set<int> _selectedSeats = {}; 
+  String _userGender = 'Laki-laki'; 
 
   @override
-  void initState() {//default
+  void initState() {
     super.initState();
     _fetchUserGender();
   }
 
-  //ambil data jenis kelamin
   void _fetchUserGender() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -37,11 +36,17 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
     }
   }
 
-  //layout kursi tour
+  // Layout kursi dinamis berdasarkan tipe (Wisata = 7, Travel = 19)
   List<List<int>> get _seatLayout {
     if (widget.route.isWisata) {
-      // Wisata configuration: 2-3-4-3-3-4 (Total 19 seats)
-      // 0 means empty space to align seats appropriately (creating an aisle)
+      // Wisata configuration: 1-3-3 (Total 7 seats)
+      return [
+        [1, 0, 0],
+        [2, 3, 4],
+        [5, 6, 7],
+      ];
+    } else {
+      // Travel configuration: 2-3-4-3-3-4 (Total 19 seats)
       return [
         [1, 2, 0, 0],
         [3, 4, 5, 0],
@@ -50,34 +55,25 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
         [13, 14, 15, 0],
         [16, 17, 18, 19],
       ];
-      //layout kursi travel
-    } else {
-      // Travel configuration: 1-3-3 (Total 7 seats)
-      // 0 means empty space to align seat 1 to the left
-      return [
-        [1, 0, 0],
-        [2, 3, 4],
-        [5, 6, 7],
-      ];
     }
   }
 
   bool _isFemaleSeat(int seatNumber) {
     if (widget.route.isWisata) {
-      return seatNumber <= 9; // First 9 seats for female (Row 1 to 3)
+      return seatNumber <= 4; // Seats 1-4 for female in 7-seat config
     } else {
-      return seatNumber <= 4; // First 4 seats for female (Row 1 & 2)
+      return seatNumber <= 9; // Seats 1-9 for female in 19-seat config
     }
   }
- //
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.route.isWisata
-              ? "Pilih Kursi - ${widget.route.toCity}" //appbar bagian atas
-              : "Pilih Kursi - ${widget.route.fromCity} ke ${widget.route.toCity}",
+              ? "Pilih Kursi Wisata - ${widget.route.toCity}"
+              : "Pilih Kursi Travel - ${widget.route.fromCity} ke ${widget.route.toCity}",
           style: const TextStyle(fontSize: 16),
         ),
       ),
@@ -88,20 +84,18 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
             _buildLegend(),
             const SizedBox(height: 20),
             Expanded(
-              child: StreamBuilder<Map<int, String>>( //map int nomor kursi //string gender,status
-                stream: _bookingService.getBookedSeatsWithGenderStream(widget.route.id),//informasi kursi yg dipesan dan gender
+              child: StreamBuilder<Map<int, String>>(
+                stream: _bookingService.getBookedSeatsWithGenderStream(widget.route.id),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  //atasi error
                   if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   }
 
                   final bookedSeatsMap = snapshot.data ?? {};
 
-                  // menghapus kursi yang sudah dipilih
                   final toRemove = _selectedSeats.where((seat) => bookedSeatsMap.containsKey(seat)).toList();
                   if (toRemove.isNotEmpty) {
                     _selectedSeats.removeAll(toRemove);
@@ -111,7 +105,6 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
                 },
               ),
             ),
-            //pesan jika blm pilih kursi
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -122,18 +115,17 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
                     );
                     return;
                   }
-                  //meneruskan ke passengerdetail screen
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => PassengerDetailsScreen( //melanjutkan halaman yg akan dibuka
+                      builder: (_) => PassengerDetailsScreen(
                         route: widget.route,
                         selectedSeats: _selectedSeats.toList()..sort(),
                       ),
                     ),
                   );
                 },
-                child: const Text("Lanjut ke Data Penumpang"), //melanjutkan ke data penumpang
+                child: const Text("Lanjut ke Data Penumpang"),
               ),
             ),
           ],
@@ -142,17 +134,15 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
     );
   }
 
-  Widget _buildSeatGrid(Map<int, String> bookedSeatsWithGender) { // parameter apakah kursi sudah dibooking untuk laki-laki atau perempuan)
+  Widget _buildSeatGrid(Map<int, String> bookedSeatsWithGender) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        int maxSeatsInRow = widget.route.isWisata ? 4 : 3;
+        int maxSeatsInRow = widget.route.isWisata ? 3 : 4;
         double spacing = 10.0;
         
-        //memastikan bahwa ukuran kursi disesuaikan dengan lebar layar yang tersedia dan jumlah kursi yang ingin ditampilkan dalam satu baris.
         double seatSize = (constraints.maxWidth / maxSeatsInRow) - spacing;
-        if (seatSize > 70) seatSize = 70; // dibatasi agar tidak lebih besar dari 70 piksel.
+        if (seatSize > 70) seatSize = 70;
 
-        //membangun grid kursi dinamis dapat digulir secara vertikal menggunakan SingleChildScrollView
         return SingleChildScrollView(
           child: Column(
             children: _seatLayout.map((rowSeats) {
@@ -161,8 +151,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: rowSeats.map((seatNumber) {
-                    if (seatNumber == 0) { //Kursi kosong (diwakili dengan 0)
-                      // Render empty space
+                    if (seatNumber == 0) {
                       return Padding(
                         padding: EdgeInsets.symmetric(horizontal: spacing / 2),
                         child: SizedBox(width: seatSize, height: seatSize),
@@ -170,9 +159,8 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
                     }
 
                     return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: spacing / 2),//memastikan ada ruang di antara kursi tanpa membuatnya terlalu jauh.
+                      padding: EdgeInsets.symmetric(horizontal: spacing / 2),
                       child: _buildSeat(seatNumber, bookedSeatsWithGender, seatSize),
-                      ////memvisualisasi kursi dalam grid, mempertimbangkan status kursi (sudah dibooking atau tersedia)
                     );
                   }).toList(),
                 ),
@@ -185,27 +173,24 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
   }
 
   Widget _buildSeat(int seatNumber, Map<int, String> bookedSeatsWithGender, double size) {
-    final isBooked = bookedSeatsWithGender.containsKey(seatNumber); //variabel boolean memeriksa apakah kursi sudah dibooking.
-    final isSelected = _selectedSeats.contains(seatNumber); //memeriksa seatNumber ada dalam bookedSeatsWithGender, berarti kursi tersebut sudah dibooking
-    final isFemaleArea = _isFemaleSeat(seatNumber); //variabel boolean memeriksa apakah kursi berada di area khusus untuk perempuan.
-    final bookedGender = bookedSeatsWithGender[seatNumber]; //menyimpan informasi gender pengguna yang sudah memesan kursi tersebut
+    final isBooked = bookedSeatsWithGender.containsKey(seatNumber);
+    final isSelected = _selectedSeats.contains(seatNumber);
+    final isFemaleArea = _isFemaleSeat(seatNumber);
+    final bookedGender = bookedSeatsWithGender[seatNumber];
 
-    //Menentukan Status Kursi
-    int status = 0; // 0=Available
+    int status = 0; 
     if (isBooked) {
-      status = 2; // 2=Booked
+      status = 2; 
     } else if (isSelected) {
-      status = 1; // 1=Selected
+      status = 1; 
     }
 
-    final bool isUserFemale = _userGender == 'Perempuan'; //cek apakah perempuan dengan variabel bool
+    final bool isUserFemale = _userGender == 'Perempuan';
 
-    //dapat memilih kursi yang kosong, tidak bisa pilih yang sudah dipesan
     return GestureDetector(
       onTap: () {
         if (isBooked) return;
 
-        //memastikan UI akan diperbarui setiap pengguna memilih atau membatalkan pilihan kursi.
         setState(() {
           if (isSelected) {
             _selectedSeats.remove(seatNumber);
@@ -214,7 +199,6 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
           }
         });
       },
-      //memberikan warna kursi
       child: Container(
         width: size,
         height: size,
@@ -228,7 +212,6 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
             width: isSelected ? 2 : 1,
           ),
         ),
-        //icon warna jika dipilih
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -238,7 +221,6 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
                 color: (status == 1 || status == 2) ? Colors.white : Colors.grey[600],
                 size: size * 0.35,
               ),
-              //penomoran kursi
               const SizedBox(height: 4),
               Text(
                 "$seatNumber",
@@ -254,14 +236,13 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
       ),
     );
   }
-//fungsi getseat memberikan warna berdasarkan faktor
+
   Color _getSeatColor(int status, bool isFemaleArea, bool isUserFemale, String? bookedGender) {
     if (status == 2) {
-      // Booked: Color based on the gender of the person who booked it
       return (bookedGender == 'Perempuan') ? Colors.pink[200]! : Colors.blue[200]!;
     }
-    if (status == 1) return isUserFemale ? Colors.pink[500]! : Colors.blue[500]!; // Selected
-    return Colors.green[50]!; // tersedia hijau
+    if (status == 1) return isUserFemale ? Colors.pink[500]! : Colors.blue[500]!; 
+    return Colors.green[50]!; 
   }
 
   Widget _buildLegend() {
@@ -270,8 +251,8 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
       runSpacing: 12,
       alignment: WrapAlignment.center,
       children: [
-        _legendItem(Colors.green[50]!, "Tersedia"), //hijau untuk tersedia
-        _legendItem(Colors.pink[500]!, "Terpilih (P)"),//pink tua untuk terpilih perempuan
+        _legendItem(Colors.green[50]!, "Tersedia"),
+        _legendItem(Colors.pink[500]!, "Terpilih (P)"),
         _legendItem(Colors.blue[500]!, "Terpilih (L)"),
         _legendItem(Colors.pink[200]!, "Dipesan (P)"),
         _legendItem(Colors.blue[200]!, "Dipesan (L)"),
@@ -279,9 +260,9 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
     );
   }
 
-  Widget _legendItem(Color color, String label) { //Fungsi _legendItem  widget membangun item dalam tampilan warna status kursi dan label
-    return Row(//horizontal
-      mainAxisSize: MainAxisSize.min, //menampung konten, kotak warna dan teks. memastikan tampilan tidak terlalu lebar.
+  Widget _legendItem(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 16,
@@ -293,7 +274,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> { //fungsi be
           ),
         ),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 12)), //menampilkan label, yang merupakan teks yang menjelaskan warna kursi
+        Text(label, style: const TextStyle(fontSize: 12)),
       ],
     );
   }

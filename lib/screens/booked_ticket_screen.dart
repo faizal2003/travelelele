@@ -66,11 +66,28 @@ class TicketBookedScreen extends StatelessWidget {
     }
 
     // ambil data booking dari firestore
-    final bookings = snapshot.data?.docs ?? [];
+    final allBookings = snapshot.data?.docs ?? [];
+    final now = DateTime.now();
+
+    // Filter out expired tickets (passed arrival time)
+    final bookings = allBookings.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final date = data['date'];
+      final arriveTime = data['arriveTime'];
+
+      if (date == null || arriveTime == null) return true;
+
+      try {
+        final arrivalDateTime = DateTime.parse("$date $arriveTime:00");
+        return arrivalDateTime.isAfter(now);
+      } catch (e) {
+        return true; // Keep if parsing fails
+      }
+    }).toList();
 
     //jika data kosong- no tiket
     if (bookings.isEmpty) {
-      return const Center(child: Text('No tickets found.'));
+      return const Center(child: Text('No active tickets found.'));
     }
 
     //menampilkan daftar tiket
