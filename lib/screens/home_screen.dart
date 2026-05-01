@@ -48,101 +48,128 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final TripService tripService = TripService();
-    final PromoService promoService = PromoService();
+  State<HomeContent> createState() => _HomeContentState();
+}
 
+class _HomeContentState extends State<HomeContent> {
+  final TripService tripService = TripService();
+  final PromoService promoService = PromoService();
+
+  String _calculateDiscountedPrice(String originalPrice, String discount) {
+    try {
+      int price = int.parse(originalPrice.replaceAll(RegExp(r'[^0-9]'), ''));
+      if (discount.contains('%')) {
+        int percent = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
+        int discounted = (price * (100 - percent) / 100).round();
+        return _formatRupiah(discounted);
+      } else {
+        int amount = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
+        int discounted = price - amount;
+        return _formatRupiah(discounted > 0 ? discounted : 0);
+      }
+    } catch (e) {
+      return originalPrice;
+    }
+  }
+
+  String _formatRupiah(int amount) {
+    String formatted = amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return "Rp $formatted";
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("SVARGADWIPA"),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Hero Section (Featured Wisata)
-            StreamBuilder<List<Trip>>(
-              stream: tripService.getFeaturedTrips(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
-                }
-                final featured = snapshot.data ?? [];
-                if (featured.isEmpty) {
-                  return const SizedBox(height: 200, child: Center(child: Text("Belum ada konten unggulan")));
-                }
-                return _buildHeroSection(featured);
-              },
-            ),
-            
-            // Categories
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildCategoryCard(
-                      context,
-                      "Cari Travel",
-                      Icons.directions_bus,
-                      Colors.blue,
-                    ),
+      body: StreamBuilder<List<Promo>>(
+        stream: promoService.getPromos(),
+        builder: (context, promoSnapshot) {
+          final promos = promoSnapshot.data ?? [];
+          
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Hero Section (Featured Wisata)
+                StreamBuilder<List<Trip>>(
+                  stream: tripService.getFeaturedTrips(),
+                  builder: (context, tripSnapshot) {
+                    if (tripSnapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+                    }
+                    final featured = tripSnapshot.data ?? [];
+                    if (featured.isEmpty) {
+                      return const SizedBox(height: 200, child: Center(child: Text("Belum ada konten unggulan")));
+                    }
+                    return _buildHeroSection(featured, promos);
+                  },
+                ),
+                
+                // Categories
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildCategoryCard(
+                          context,
+                          "Cari Travel",
+                          Icons.directions_bus,
+                          Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildCategoryCard(
+                          context,
+                          "Cari Wisata",
+                          Icons.landscape,
+                          Colors.orange,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildCategoryCard(
-                      context,
-                      "Cari Wisata",
-                      Icons.landscape,
-                      Colors.orange,
-                    ),
+                ),
+                
+                // Promo Section
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Promo Special",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 180,
+                  child: promos.isEmpty
+                      ? const Center(child: Text("Belum ada promo."))
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.only(left: 16),
+                          itemCount: promos.length,
+                          itemBuilder: (context, index) => _buildPromoCard(context, promos[index]),
+                        ),
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
-            
-            // Promo Section
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                "Promo Special",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 180,
-              child: StreamBuilder<List<Promo>>(
-                stream: promoService.getPromos(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final promos = snapshot.data ?? [];
-                  if (promos.isEmpty) {
-                    return const Center(child: Text("Belum ada promo."));
-                  }
-                  return ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.only(left: 16),
-                    itemCount: promos.length,
-                    itemBuilder: (context, index) => _buildPromoCard(context, promos[index]),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildHeroSection(List<Trip> featuredTrips) {
+  Widget _buildHeroSection(List<Trip> featuredTrips, List<Promo> promos) {
     return CarouselSlider(
       options: CarouselOptions(
         height: 200.0,
@@ -152,12 +179,18 @@ class HomeContent extends StatelessWidget {
         autoPlayInterval: const Duration(seconds: 5),
       ),
       items: featuredTrips.map((trip) {
+        // Find if this trip has an active promo
+        final promo = promos.where((p) => p.wisataId == trip.id).firstOrNull;
+        final String displayPrice = promo != null 
+            ? _calculateDiscountedPrice(trip.price, promo.discount)
+            : trip.price;
+
         return Builder(
           builder: (BuildContext context) {
             return GestureDetector(
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => DetailScreen(trip: trip)),
+                MaterialPageRoute(builder: (_) => DetailScreen(trip: trip, promo: promo)),
               ),
               child: Stack(
                 fit: StackFit.expand,
@@ -193,9 +226,9 @@ class HomeContent extends StatelessWidget {
                             color: Colors.orange,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            "Featured",
-                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          child: Text(
+                            promo != null ? "Promo ${promo.discount}" : "Featured",
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -203,9 +236,24 @@ class HomeContent extends StatelessWidget {
                           trip.title,
                           style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                         ),
-                        Text(
-                          trip.price,
-                          style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500),
+                        Row(
+                          children: [
+                            Text(
+                              displayPrice,
+                              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            if (promo != null) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                trip.price,
+                                style: const TextStyle(
+                                  color: Colors.white70, 
+                                  fontSize: 12, 
+                                  decoration: TextDecoration.lineThrough
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -259,49 +307,65 @@ class HomeContent extends StatelessWidget {
   }
 
   Widget _buildPromoCard(BuildContext context, Promo promo) {
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [const BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Image.network(
-              promo.image,
-              height: 100,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+    return InkWell(
+      onTap: () {
+        if (promo.wisataId != null) {
+          tripService.getTrips().first.then((trips) {
+            final trip = trips.where((t) => t.id == promo.wisataId).firstOrNull;
+            if (trip != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => DetailScreen(trip: trip, promo: promo)),
+              );
+            }
+          });
+        }
+      },
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [const BoxShadow(color: Colors.black12, blurRadius: 4)],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: Image.network(
+                promo.image,
+                height: 100,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(child: Text(promo.title, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)),
-                      child: Text(promo.discount, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-                Text(promo.description, style: const TextStyle(color: Colors.grey, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
-              ],
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(child: Text(promo.title, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)),
+                        child: Text(promo.discount, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  Text(promo.description, style: const TextStyle(color: Colors.grey, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+

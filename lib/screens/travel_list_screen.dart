@@ -1,136 +1,204 @@
 import 'package:flutter/material.dart';
 import '../models/trip_model.dart';
 import '../services/trip_service.dart';
+import '../models/promo_model.dart';
+import '../services/promo_service.dart';
 import 'detail_screen.dart';
 
-class TravelListScreen extends StatelessWidget {
+class TravelListScreen extends StatefulWidget {
   const TravelListScreen({super.key});
 
-//travel
+  @override
+  State<TravelListScreen> createState() => _TravelListScreenState();
+}
+
+class _TravelListScreenState extends State<TravelListScreen> {
+  final TripService tripService = TripService();
+  final PromoService promoService = PromoService();
+
+  String _calculateDiscountedPrice(String originalPrice, String discount) {
+    try {
+      int price = int.parse(originalPrice.replaceAll(RegExp(r'[^0-9]'), ''));
+      if (discount.contains('%')) {
+        int percent = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
+        int discounted = (price * (100 - percent) / 100).round();
+        return _formatRupiah(discounted);
+      } else {
+        int amount = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
+        int discounted = price - amount;
+        return _formatRupiah(discounted > 0 ? discounted : 0);
+      }
+    } catch (e) {
+      return originalPrice;
+    }
+  }
+
+  String _formatRupiah(int amount) {
+    String formatted = amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return "Rp $formatted";
+  }
+
   @override
   Widget build(BuildContext context) {
-    final TripService tripService = TripService();
-
     return Scaffold(
-      body: StreamBuilder<List<Trip>>(
-        stream: tripService.getTrips(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final tripsList = snapshot.data ?? [];
+      body: StreamBuilder<List<Promo>>(
+        stream: promoService.getPromos(),
+        builder: (context, promoSnapshot) {
+          final promos = promoSnapshot.data ?? [];
           
-          return CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                expandedHeight: 200.0,
-                floating: false,
-                pinned: true,
-                flexibleSpace: FlexibleSpaceBar(
-                  title: const Text(
-                    "Paket Wisata",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      shadows: [Shadow(blurRadius: 10, color: Colors.black)],
-                    ),
-                  ),
-                  //mengatur gambar latar belakang di halaman dengan Image.mengambil gambar dari URL
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(
-                        "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-                        fit: BoxFit.cover,
-                      ),
-                      //gradasi gambar
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.7),
-                            ],
-                          ),
+          return StreamBuilder<List<Trip>>(
+            stream: tripService.getTrips(),
+            builder: (context, tripSnapshot) {
+              if (tripSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final tripsList = tripSnapshot.data ?? [];
+              
+              return CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: 200.0,
+                    floating: false,
+                    pinned: true,
+                    flexibleSpace: FlexibleSpaceBar(
+                      title: const Text(
+                        "Paket Wisata",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          shadows: [Shadow(blurRadius: 10, color: Colors.black)],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              //padding
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: tripsList.isEmpty 
-                  ? const SliverFillRemaining(child: Center(child: Text("Belum ada paket wisata tersedia.")))
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final trip = tripsList[index];
-                          return _buildTripCard(context, trip);
-                        },
-                        childCount: tripsList.length,
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+                            fit: BoxFit.cover,
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.7),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-              ),
-            ],
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.all(16),
+                    sliver: tripsList.isEmpty 
+                      ? const SliverFillRemaining(child: Center(child: Text("Belum ada paket wisata tersedia.")))
+                      : SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final trip = tripsList[index];
+                              final promo = promos.where((p) => p.wisataId == trip.id).firstOrNull;
+                              return _buildTripCard(context, trip, promo);
+                            },
+                            childCount: tripsList.length,
+                          ),
+                        ),
+                  ),
+                ],
+              );
+            }
           );
         }
       ),
     );
   }
 
-  Widget _buildTripCard(BuildContext context, Trip trip) {
+  Widget _buildTripCard(BuildContext context, Trip trip, Promo? promo) {
+    final String finalPrice = promo != null 
+        ? _calculateDiscountedPrice(trip.price, promo.discount)
+        : trip.price;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => DetailScreen(trip: trip)),
+          MaterialPageRoute(builder: (_) => DetailScreen(trip: trip, promo: promo)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //melengkung pada gambar atas bagian wisata
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
-                trip.image,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  Image.network(
+                    trip.image,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                  if (promo != null)
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          "Promo ${promo.discount}",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-            //menampilkan rating wisata
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    trip.title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        trip.title,
+                        finalPrice,
                         style: const TextStyle(
-                          fontSize: 18,
+                          color: Colors.orange,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      if (promo != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          trip.price,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ],
                     ],
-                  ),
-                  //menampilkan harga perjalanan
-                  const SizedBox(height: 8),
-                  Text(
-                    trip.price,
-                    style: const TextStyle(
-                      color: Colors.orange,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ],
               ),
