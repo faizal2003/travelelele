@@ -3,6 +3,7 @@ import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
 import 'qr_scanner_screen.dart';
+import 'driver_map_screen.dart';
 
 class DriverDashboard extends StatelessWidget {
   const DriverDashboard({super.key});
@@ -89,8 +90,9 @@ class DriverDashboard extends StatelessWidget {
                 childAspectRatio: 1.1,
                 children: [
                   _driverMenu(Icons.qr_code_scanner, "Scan Barcode\nTiket", Colors.blue, () => _openScanner(context)),
-                  _driverMenu(Icons.map, "Maps\nPengguna", Colors.teal, () {}),
-                  _driverMenu(Icons.people, "Biodata\nPenumpang", Colors.orange, () {}),
+                  _driverMenu(Icons.map, "Maps\nPengguna", Colors.teal, () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const DriverMapScreen()));
+                  }),
                   _driverMenu(Icons.person, "Profile\nDriver", Colors.indigo, () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
                   }),

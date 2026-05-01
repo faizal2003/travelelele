@@ -5,6 +5,7 @@ import 'destination_management_screen.dart';
 import 'wisata_management_screen.dart';
 import 'promo_management_screen.dart';
 import 'user_management_screen.dart';
+import 'financial_report_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -89,7 +90,14 @@ class AdminDashboard extends StatelessWidget {
                       ),
                     );
                   }),
-                  _adminMenu(Icons.bar_chart, "Laporan\nKeuangan", Colors.purple, () {}),
+                  _adminMenu(Icons.bar_chart, "Laporan\nKeuangan", Colors.purple, () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const FinancialReportScreen(),
+                      ),
+                    );
+                  }),
                   _adminMenu(Icons.people, "Kelola\nPengguna", Colors.red, () {
                     Navigator.push(
                       context,

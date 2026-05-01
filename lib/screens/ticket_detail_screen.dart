@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'passenger_track_driver_screen.dart';
 
 class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
   final Map<String, dynamic> ticketData;
@@ -25,7 +26,7 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
     final seats = List<int>.from(ticketData['seats'] ?? []);
     final passengers = List<Map<String, dynamic>>.from(ticketData['passengers'] ?? []);
     final totalPrice = ticketData['totalPrice']?.toString() ?? '0';
-
+    final driverId = ticketData['driverId'];
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -39,6 +40,10 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildTicketHeader(fromCity, toCity, status, isWisata), //menampilkan header tiket, mencakup informasi
+            if (driverId != null) ...[
+              const SizedBox(height: 24),
+              _buildTrackDriverSection(context, driverId),
+            ],
             const SizedBox(height: 24),
             _buildTripInfo(date, departTime, arriveTime, seats), //menampilkan informasi perjalanan
             const SizedBox(height: 24),
@@ -49,6 +54,51 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
             _buildPaymentInfo(totalPrice), //menampilkan informasi pembayaran
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTrackDriverSection(BuildContext context, String driverId) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blue[200]!),
+      ),
+      child: Column(
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "Driver telah melakukan scan tiket. Anda dapat melacak posisi driver sekarang.",
+                  style: TextStyle(fontSize: 12, color: Colors.blue),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PassengerTrackDriverScreen(driverId: driverId),
+                ),
+              );
+            },
+            icon: const Icon(Icons.location_searching),
+            label: const Text("Lacak Posisi Driver"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[800],
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 45),
+            ),
+          ),
+        ],
       ),
     );
   }

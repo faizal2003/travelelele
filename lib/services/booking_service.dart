@@ -91,9 +91,11 @@ class BookingService {
     }
 
     // Update status menjadi 'used' untuk menginvalidasi tiket
+    final user = _auth.currentUser;
     await docRef.update({
       'status': 'used',
       'usedAt': FieldValue.serverTimestamp(),
+      'driverId': user?.uid,
     });
 
     return data;

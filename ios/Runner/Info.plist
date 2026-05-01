@@ -47,5 +47,9 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to scan ticket QR codes</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to location when open to show the driver's position on the map.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to location when in the background to track the driver's position.</string>
 </dict>
 </plist>
