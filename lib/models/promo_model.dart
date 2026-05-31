@@ -38,4 +38,31 @@ class Promo {
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
+
+  /// Calculates the discounted price and returns it as a formatted Rupiah string.
+  static String calculateDiscountedPrice(String originalPrice, String discount) {
+    try {
+      int price = int.parse(originalPrice.replaceAll(RegExp(r'[^0-9]'), ''));
+      if (discount.contains('%')) {
+        int percent = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
+        int discounted = (price * (100 - percent) / 100).round();
+        return formatRupiah(discounted);
+      } else {
+        int amount = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
+        int discounted = price - amount;
+        return formatRupiah(discounted > 0 ? discounted : 0);
+      }
+    } catch (e) {
+      return originalPrice;
+    }
+  }
+
+  static String formatRupiah(int amount) {
+    String formatted = amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+    return "Rp $formatted";
+  }
 }
+

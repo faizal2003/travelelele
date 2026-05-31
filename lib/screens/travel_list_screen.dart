@@ -16,31 +16,6 @@ class _TravelListScreenState extends State<TravelListScreen> {
   final TripService tripService = TripService();
   final PromoService promoService = PromoService();
 
-  String _calculateDiscountedPrice(String originalPrice, String discount) {
-    try {
-      int price = int.parse(originalPrice.replaceAll(RegExp(r'[^0-9]'), ''));
-      if (discount.contains('%')) {
-        int percent = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
-        int discounted = (price * (100 - percent) / 100).round();
-        return _formatRupiah(discounted);
-      } else {
-        int amount = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
-        int discounted = price - amount;
-        return _formatRupiah(discounted > 0 ? discounted : 0);
-      }
-    } catch (e) {
-      return originalPrice;
-    }
-  }
-
-  String _formatRupiah(int amount) {
-    String formatted = amount.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
-    return "Rp $formatted";
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,7 +96,7 @@ class _TravelListScreenState extends State<TravelListScreen> {
 
   Widget _buildTripCard(BuildContext context, Trip trip, Promo? promo) {
     final String finalPrice = promo != null 
-        ? _calculateDiscountedPrice(trip.price, promo.discount)
+        ? Promo.calculateDiscountedPrice(trip.price, promo.discount)
         : trip.price;
 
     return Card(

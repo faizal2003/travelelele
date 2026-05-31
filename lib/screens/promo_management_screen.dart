@@ -61,7 +61,43 @@ class _PromoManagementScreenState extends State<PromoManagementScreen> {
                 TextField(controller: titleController, decoration: const InputDecoration(labelText: "Judul Promo")),
                 TextField(controller: imageController, decoration: const InputDecoration(labelText: "URL Gambar")),
                 TextField(controller: descController, decoration: const InputDecoration(labelText: "Deskripsi")),
-                TextField(controller: discountController, decoration: const InputDecoration(labelText: "Diskon (e.g. 50%)")),
+                TextField(
+                  controller: discountController, 
+                  decoration: const InputDecoration(labelText: "Diskon (e.g. 50% atau 25000)"),
+                  onChanged: (_) => setDialogState(() {}),
+                ),
+                if (selectedWisataId != null && discountController.text.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: StreamBuilder<List<Trip>>(
+                      stream: _tripService.getTrips(),
+                      builder: (context, snapshot) {
+                        final trip = snapshot.data?.where((t) => t.id == selectedWisataId).firstOrNull;
+                        if (trip == null) return const SizedBox();
+                        final preview = Promo.calculateDiscountedPrice(trip.price, discountController.text);
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green[200]!),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: Colors.green, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  "Preview Harga: $preview",
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
               ],
             ),
           ),

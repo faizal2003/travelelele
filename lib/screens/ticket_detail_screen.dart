@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../models/promo_model.dart';
 import 'passenger_track_driver_screen.dart';
 
 class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
@@ -25,7 +26,9 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
     final status = ticketData['status'] ?? 'Unknown';
     final seats = List<int>.from(ticketData['seats'] ?? []);
     final passengers = List<Map<String, dynamic>>.from(ticketData['passengers'] ?? []);
-    final totalPrice = ticketData['totalPrice']?.toString() ?? '0';
+    final int totalPrice = ticketData['totalPrice'] is int 
+        ? ticketData['totalPrice'] 
+        : int.tryParse(ticketData['totalPrice']?.toString() ?? '0') ?? 0;
     final driverId = ticketData['driverId'];
 
     return Scaffold(
@@ -348,7 +351,7 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
     );
   }
   //total pembayaran
-  Widget _buildPaymentInfo(String totalPrice) {
+  Widget _buildPaymentInfo(int totalPrice) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -364,7 +367,7 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           Text(
-            "Rp $totalPrice",
+            Promo.formatRupiah(totalPrice),
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -376,3 +379,4 @@ class TicketDetailScreen extends StatelessWidget { //kelas tiket detail
     );
   }
 }
+

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/promo_model.dart';
 import '../models/trip_model.dart';
 import '../services/trip_service.dart';
 
@@ -12,18 +13,6 @@ class WisataManagementScreen extends StatefulWidget {
 
 class _WisataManagementScreenState extends State<WisataManagementScreen> {
   final TripService _tripService = TripService();
-
-  String _formatRupiah(String value) {
-    if (value.isEmpty) return "Rp 0";
-    String digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.isEmpty) return "Rp 0";
-    final number = int.parse(digits);
-    String formatted = number.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
-    return "Rp $formatted";
-  }
 
   void _showTripDialog({Trip? trip}) {
     final titleController = TextEditingController(text: trip?.title);
@@ -60,11 +49,12 @@ class _WisataManagementScreenState extends State<WisataManagementScreen> {
             TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
             ElevatedButton(
               onPressed: () {
+                final int priceVal = int.tryParse(priceController.text) ?? 0;
                 final newTrip = Trip(
                   id: trip?.id ?? '',
                   title: titleController.text,
                   image: imageController.text,
-                  price: _formatRupiah(priceController.text),
+                  price: Promo.formatRupiah(priceVal),
                   isFeatured: isFeatured,
                 );
 

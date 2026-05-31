@@ -36,17 +36,10 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     }
   }
 
-  // Layout kursi dinamis berdasarkan tipe (Wisata = 7, Travel = 19)
+  // Layout kursi dinamis berdasarkan tipe (Wisata = 19, Travel = 7)
   List<List<int>> get _seatLayout {
     if (widget.route.isWisata) {
-      // Wisata configuration: 1-3-3 (Total 7 seats)
-      return [
-        [1, 0, 0],
-        [2, 3, 4],
-        [5, 6, 7],
-      ];
-    } else {
-      // Travel configuration: 2-3-4-3-3-4 (Total 19 seats)
+      // Wisata (Tour) configuration: 2-3-4-3-3-4 (Total 19 seats)
       return [
         [1, 2, 0, 0],
         [3, 4, 5, 0],
@@ -55,14 +48,21 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
         [13, 14, 15, 0],
         [16, 17, 18, 19],
       ];
+    } else {
+      // Travel configuration: 1-3-3 (Total 7 seats)
+      return [
+        [1, 0, 0],
+        [2, 3, 4],
+        [5, 6, 7],
+      ];
     }
   }
 
   bool _isFemaleSeat(int seatNumber) {
     if (widget.route.isWisata) {
-      return seatNumber <= 4; // Seats 1-4 for female in 7-seat config
-    } else {
       return seatNumber <= 9; // Seats 1-9 for female in 19-seat config
+    } else {
+      return seatNumber <= 4; // Seats 1-4 for female in 7-seat config
     }
   }
 
@@ -137,7 +137,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   Widget _buildSeatGrid(Map<int, String> bookedSeatsWithGender) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        int maxSeatsInRow = widget.route.isWisata ? 3 : 4;
+        int maxSeatsInRow = widget.route.isWisata ? 4 : 3;
         double spacing = 10.0;
         
         double seatSize = (constraints.maxWidth / maxSeatsInRow) - spacing;

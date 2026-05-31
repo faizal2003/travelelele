@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/promo_model.dart';
 import '../models/route_model.dart';
 import '../services/route_service.dart';
 
@@ -13,18 +14,6 @@ class DestinationManagementScreen extends StatefulWidget {
 class _DestinationManagementScreenState extends State<DestinationManagementScreen> {
   final RouteService _routeService = RouteService();
   final List<String> _cities = ['Madiun', 'Surabaya', 'Yogyakarta', 'Malang'];
-
-  String _formatRupiah(String value) {
-    if (value.isEmpty) return "Rp 0";
-    String digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.isEmpty) return "Rp 0";
-    final number = int.parse(digits);
-    String formatted = number.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
-    return "Rp $formatted";
-  }
 
   void _showRouteDialog({TravelRoute? route}) {
     String? selectedFrom = route?.fromCity;
@@ -127,6 +116,7 @@ class _DestinationManagementScreenState extends State<DestinationManagementScree
                   );
                   return;
                 }
+                final int priceVal = int.tryParse(priceController.text) ?? 0;
                 final newRoute = TravelRoute(
                   id: route?.id ?? '',
                   fromCity: selectedFrom!,
@@ -134,8 +124,8 @@ class _DestinationManagementScreenState extends State<DestinationManagementScree
                   date: dateController.text,
                   departTime: departController.text,
                   arriveTime: arriveController.text,
-                  price: _formatRupiah(priceController.text),
-                  seatsAvailable: 19, // Always 19 for Travel
+                  price: Promo.formatRupiah(priceVal),
+                  seatsAvailable: 7, // Always 7 for Travel
                   isWisata: false, // Always Travel
                 );
 

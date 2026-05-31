@@ -10,35 +10,10 @@ class DetailScreen extends StatelessWidget {
 
   const DetailScreen({super.key, required this.trip, this.promo});
 
-  String _calculateDiscountedPrice(String originalPrice, String discount) {
-    try {
-      int price = int.parse(originalPrice.replaceAll(RegExp(r'[^0-9]'), ''));
-      if (discount.contains('%')) {
-        int percent = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
-        int discounted = (price * (100 - percent) / 100).round();
-        return _formatRupiah(discounted);
-      } else {
-        int amount = int.parse(discount.replaceAll(RegExp(r'[^0-9]'), ''));
-        int discounted = price - amount;
-        return _formatRupiah(discounted > 0 ? discounted : 0);
-      }
-    } catch (e) {
-      return originalPrice;
-    }
-  }
-
-  String _formatRupiah(int amount) {
-    String formatted = amount.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
-    return "Rp $formatted";
-  }
-
   @override
   Widget build(BuildContext context) {
     final String finalPrice = promo != null 
-        ? _calculateDiscountedPrice(trip.price, promo!.discount)
+        ? Promo.calculateDiscountedPrice(trip.price, promo!.discount)
         : trip.price;
 
     return Scaffold(
@@ -131,7 +106,7 @@ class DetailScreen extends StatelessWidget {
                           departTime: '08:00',
                           arriveTime: '18:00',
                           price: finalPrice,
-                          seatsAvailable: 7,
+                          seatsAvailable: 19,
                           isWisata: true,
                         );
 
@@ -154,4 +129,5 @@ class DetailScreen extends StatelessWidget {
     );
   }
 }
+
 

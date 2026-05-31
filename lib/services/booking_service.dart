@@ -29,24 +29,36 @@ class BookingService {
     });
   }
 
-  // menyimpan booking dengan gender
-  Future<String> createBooking({//fungsi membuat pemesanan tiket baru.
+  // Get a specific booking stream
+  Stream<DocumentSnapshot> getBookingStream(String bookingId) {
+    return _firestore.collection('bookings').doc(bookingId).snapshots();
+  }
+
+  // Update booking status
+  Future<void> updateBookingStatus(String bookingId, String status) {
+    return _firestore.collection('bookings').doc(bookingId).update({
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Create a pending booking
+  Future<String> createBooking({
     required TravelRoute route,
     required List<int> selectedSeats,
     required List<String> passengerNames,
     required List<String> passengerPhones,
     required int totalPrice,
+    String status = 'pending', // Default to pending for Webhook flow
   }) async {
-    final user = _auth.currentUser; //ambil data pengguna yg login
+    final user = _auth.currentUser;
     if (user == null) throw Exception("User not logged in");
 
-
-    final userDoc = await _firestore.collection('users').doc(user.uid).get(); //ambil data firestore
+    final userDoc = await _firestore.collection('users').doc(user.uid).get();
     final userGender = userDoc.data()?['gender'] ?? 'Laki-laki';
 
-    //
-    List<Map<String, dynamic>> passengers = []; //membuat list
-    for (int i = 0; i < selectedSeats.length; i++) { //looping
+    List<Map<String, dynamic>> passengers = [];
+    for (int i = 0; i < selectedSeats.length; i++) {
       passengers.add({
         'seat': selectedSeats[i],
         'name': passengerNames[i],
@@ -54,7 +66,7 @@ class BookingService {
       });
     }
 
-    final docRef = await _firestore.collection('bookings').add({ //akses firestore
+    final docRef = await _firestore.collection('bookings').add({
       'userId': user.uid,
       'userGender': userGender,
       'routeId': route.id,
@@ -67,8 +79,8 @@ class BookingService {
       'seats': selectedSeats,
       'passengers': passengers,
       'totalPrice': totalPrice,
-      'status': 'paid',
-      'createdAt': FieldValue.serverTimestamp(),//memberikan waktu yang diatur
+      'status': status,
+      'createdAt': FieldValue.serverTimestamp(),
     });
 
     return docRef.id;
