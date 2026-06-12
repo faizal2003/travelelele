@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart'; // Import Core
-import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   //fungsi main
@@ -39,7 +39,7 @@ class SmartTravelApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(), //Menentukan halaman pertama yang ditampilkan
+      home: const SplashScreen(), //Menentukan halaman pertama yang ditampilkan
     );
   }
 }
