@@ -3,13 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class MidtransService {
-  // Your Backend Configuration
-  // Use http://10.0.2.2:3000/api for Android Emulator, 
-  // http://localhost:3000/api for iOS Simulator, 
-  // or your actual backend URL (e.g., https://your-domain.com/api)
+  // Konfigurasi Backend
+  // Gunakan http://10.0.2.2:3000/api untuk Emulator Android, 
+  // http://localhost:3000/api untuk Simulator iOS, 
+  // atau URL backend produksi Anda (contoh: https://domain-anda.com/api)
   static const String backendBaseUrl = "https://mdtrns.detectpadi.my.id/api";
 
-  /// Fetches the QRIS Image URL from your Node.js backend.
+  /// Mengambil URL Gambar QRIS dari backend Node.js.
   Future<String?> getQrisImageUrl({
     required String orderId,
     required int grossAmount,
@@ -29,7 +29,7 @@ class MidtransService {
       );
 
       debugPrint("Backend response status: ${response.statusCode}");
-      debugPrint("Backend response body: ${response.body}"); // Uncomment for debugging
+      // debugPrint("Backend response body: ${response.body}"); // Hapus komentar untuk proses debugging
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -44,7 +44,7 @@ class MidtransService {
     }
   }
 
-  /// Checks the transaction status via your Node.js backend.
+  /// Memeriksa status transaksi melalui backend Node.js.
   Future<String> checkStatus(String orderId) async {
     try {
       debugPrint("Checking status via backend for Order: $orderId");

@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:gal/gal.dart';
 import '../models/route_model.dart';
 import '../services/booking_service.dart';
 import '../services/midtrans_service.dart';
@@ -33,7 +35,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   StreamSubscription? _bookingSubscription;
   Timer? _statusTimer; // Polling timer
   
-  // Timer for QRIS expiration
+  // Timer untuk waktu kedaluwarsa QRIS
   Timer? _timer;
   int _start = 900; // 15 minutes
 
@@ -51,12 +53,55 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.dispose();
   }
 
+  bool _isDownloadingQris = false;
+
+  Future<void> _downloadQris() async {
+    if (_qrisImageUrl == null) return;
+    setState(() => _isDownloadingQris = true);
+    
+    try {
+      final hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        final request = await Gal.requestAccess();
+        if (!request) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Akses galeri ditolak", style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+            );
+            setState(() => _isDownloadingQris = false);
+          }
+          return;
+        }
+      }
+
+      final response = await http.get(Uri.parse(_qrisImageUrl!));
+      if (response.statusCode == 200) {
+        await Gal.putImageBytes(response.bodyBytes, name: 'SVARGADWIPA_QRIS_${_bookingId}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("QRIS berhasil disimpan ke Galeri!", style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+          );
+        }
+      } else {
+        throw Exception("Gagal mengunduh gambar");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal menyimpan QRIS: $e", style: const TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDownloadingQris = false);
+    }
+  }
+
   void _startBookingProcess() async {
     int pricePerSeat = int.parse(widget.route.price.replaceAll(RegExp(r'[^0-9]'), ''));
     int totalPrice = pricePerSeat * widget.selectedSeats.length;
 
     try {
-      // 1. Create a PENDING booking first to get a stable Order ID (using the doc ID)
+      // 1. Buat pesanan dengan status 'pending' terlebih dahulu untuk mendapatkan ID Pesanan yang stabil (menggunakan ID dokumen)
       final bookingId = await _bookingService.createBooking(
         route: widget.route,
         selectedSeats: widget.selectedSeats,
@@ -68,7 +113,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
       setState(() => _bookingId = bookingId);
 
-      // 2. Request QRIS Image URL from your backend using the bookingId as Order ID
+      // 2. Meminta URL Gambar QRIS dari backend menggunakan bookingId sebagai ID Pesanan
       final imageUrl = await _midtransService.getQrisImageUrl(
         orderId: bookingId,
         grossAmount: totalPrice,
@@ -94,9 +139,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
-  // 3. Listen to Firestore for updates from the Webhook & Poll Midtrans
+  // 3. Memantau pembaruan dari Webhook di Firestore & Melakukan Polling ke Midtrans
   void _listenToBookingStatus(String bookingId) {
-    // Poll Midtrans directly for status changes
+    // Lakukan polling langsung ke Midtrans untuk memeriksa perubahan status transaksi
     _statusTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       final status = await _midtransService.checkStatus(bookingId);
       
@@ -231,7 +276,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  // Order Summary Card
+                  // Kartu Ringkasan Pesanan
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -260,7 +305,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                   const SizedBox(height: 32),
                   
-                  // QR Image Section
+                  // Bagian Gambar QRIS
                   if (_qrisImageUrl != null)
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -283,6 +328,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               if (loadingProgress == null) return child;
                               return const SizedBox(height: 280, width: 280, child: Center(child: CircularProgressIndicator()));
                             },
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: _isDownloadingQris ? null : _downloadQris,
+                            icon: _isDownloadingQris 
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Icon(Icons.download, size: 18),
+                            label: const Text("Simpan QRIS"),
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue.shade50,
+                                foregroundColor: Colors.blue.shade700,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                            ),
                           ),
                           const SizedBox(height: 16),
                           const Text(
