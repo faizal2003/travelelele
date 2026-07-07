@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart'; // Import Core
+import 'package:intl/date_symbol_data_local.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
   //fungsi main
   WidgetsFlutterBinding.ensureInitialized(); // Diperlukan untuk async
   await Firebase.initializeApp(); // menginisiasi firebase
+  await initializeDateFormatting('id_ID', null);
   runApp(const SmartTravelApp()); //menjalankan aplikasi Flutter
 }
 
