@@ -106,7 +106,6 @@ class AdminDashboard extends StatelessWidget {
                       ),
                     );
                   }),
-                  _adminMenu(Icons.settings, "Pengaturan\nSistem", Colors.grey, () {}),
                 ],
               ),
             ],
