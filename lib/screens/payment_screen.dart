@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/route_model.dart';
 import '../services/booking_service.dart';
 import 'ticket_screen.dart';
@@ -65,6 +66,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           _isInitializing = false;
         });
         _startTimer();
+        _redirectToWhatsApp();
       }
     } catch (e) {
       if (mounted) {
@@ -84,6 +86,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
         setState(() => _start--);
       }
     });
+  }
+
+  Future<void> _redirectToWhatsApp() async {
+    int pricePerSeat = int.parse(widget.route.price.replaceAll(RegExp(r'[^0-9]'), ''));
+    int totalPrice = pricePerSeat * widget.selectedSeats.length;
+    
+    final String phoneNumber = "6281230888425";
+    final String message = "Halo Admin, saya ingin melakukan pembayaran untuk pemesanan tiket.\n\n"
+        "ID Pesanan: $_bookingId\n"
+        "Total Pembayaran: Rp $totalPrice\n"
+        "Rute: ${widget.route.fromCity} - ${widget.route.toCity}\n\n"
+        "Mohon instruksi selanjutnya.";
+        
+    final Uri url = Uri.parse("https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}");
+    
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal membuka WhatsApp"), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   String get _timerDisplay {
